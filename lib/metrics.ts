@@ -5,7 +5,6 @@ import dustAbi from '@/app/dust_abi.json';
 const rpcUrl = process.env.RPC_URL;
 
 const mintedSupply = 100_000_000n;
-
 const dustAddress = "0xAD96C3dffCD6374294e2573A7fBBA96097CC8d7c";
 const lockAddress = "0x909b176220b7e782C0f3cEccaB4b19D2c433c6BB";
 
