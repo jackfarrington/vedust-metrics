@@ -1,3 +1,5 @@
+import { cacheLife } from 'next/cache';
+
 import { ethers } from 'ethers';
 
 import dustAbi from '@/app/dust_abi.json';
@@ -24,6 +26,8 @@ export interface Metrics {
 
 export async function getMetrics(): Promise<Metrics> {
   'use cache';
+
+  cacheLife('minutes');
 
   const symbol = await contract.symbol();
   const decimals = await contract.decimals();

@@ -35,7 +35,7 @@ export default async function SupplySummary() {
           </tr>
           <tr>
             <td>Percent burned</td>
-            <td className="px-3 text-right">{formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', maximumFractionDigits: 2 })}</td>
+            <td className="px-3 text-right">{formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
           </tr>
         </tbody>
       </table>
