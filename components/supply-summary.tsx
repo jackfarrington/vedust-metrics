@@ -38,7 +38,7 @@ export default async function SupplySummary() {
             <td className="px-3 text-right">{formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
           </tr>
           <tr>
-            <td>Total locked</td>
+            <td>veDUST locked</td>
             <td className="px-3 text-right">{formatNumber(locked)}</td>
           </tr>
           <tr>
