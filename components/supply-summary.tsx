@@ -3,7 +3,7 @@ import { getMetrics } from "@/lib/metrics";
 import { formatNumber } from "@/lib/utils";
 
 export default async function SupplySummary() {
-    const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, lastUpdate } = await getMetrics();
+    const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, locked, power,lastUpdate } = await getMetrics();
 
   return (
     <>
@@ -36,6 +36,14 @@ export default async function SupplySummary() {
           <tr>
             <td>Percent burned</td>
             <td className="px-3 text-right">{formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          </tr>
+          <tr>
+            <td>Total locked</td>
+            <td className="px-3 text-right">{formatNumber(locked)}</td>
+          </tr>
+          <tr>
+            <td>veDUST power</td>
+            <td className="px-3 text-right">{formatNumber(power)}</td>
           </tr>
         </tbody>
       </table>

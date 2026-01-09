@@ -26,9 +26,6 @@ export default function LastUpdated({ timestamp }: LastUpdatedProps) {
       } else if (seconds < 86400) {
         const hours = Math.floor(seconds / 3600);
         newText = `${hours} hour${hours === 1 ? '' : 's'} ago`;
-      } else {
-        const days = Math.floor(seconds / 86400);
-        newText = `${days} day${days === 1 ? '' : 's'} ago`;
       }
 
       setTimeAgo(newText);
