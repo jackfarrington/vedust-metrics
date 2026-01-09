@@ -3,7 +3,7 @@ import { getMetrics } from "@/lib/metrics";
 import { formatNumber } from "@/lib/utils";
 
 export default async function SupplySummary() {
-    const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, locked, power,lastUpdate } = await getMetrics();
+    const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, power, emittedSupply, lastUpdate } = await getMetrics();
 
   return (
     <>
@@ -18,12 +18,27 @@ export default async function SupplySummary() {
             <td className="px-3 text-right">{formatNumber(mintedSupply)}</td>
           </tr>
           <tr>
-            <td>Burned so far</td>
-            <td className="px-3 text-right">{formatNumber(burnedSoFar)}</td>
+            <td>Emitted so far</td>
+            <td className="px-3 text-right">{formatNumber(emittedSupply)}</td>
           </tr>
           <tr>
-            <td>Remaining supply</td>
-            <td className="px-3 text-right">{formatNumber(remainingSupply)}</td>
+            <td>Percent emitted</td>
+            <td className="px-3 text-right">{formatNumber(Number(emittedSupply) / Number(mintedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          </tr>
+          <tr>
+            <td>Circulation</td>
+            <td className="px-3 text-right">{formatNumber(circulation)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p className="pt-5">&#128293;</p>
+
+      <table>
+        <tbody>
+          <tr>
+            <td>Burned so far</td>
+            <td className="px-3 text-right">{formatNumber(burnedSoFar)}</td>
           </tr>
           <tr>
             <td>Pending burn</td>
@@ -37,6 +52,17 @@ export default async function SupplySummary() {
             <td>Percent burned</td>
             <td className="px-3 text-right">{formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
           </tr>
+          <tr>
+            <td>Remaining supply</td>
+            <td className="px-3 text-right">{formatNumber(remainingSupply - pendingBurn)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p className="pt-5">&#128274;</p>
+
+      <table>
+        <tbody>
           <tr>
             <td>veDUST locked</td>
             <td className="px-3 text-right">{formatNumber(locked)}</td>
