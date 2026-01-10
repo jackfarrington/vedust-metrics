@@ -29,7 +29,7 @@ export default async function SupplySummary() {
     <div className={`grid gap-6 ${quicksand.className}`}>
       <div className="rounded-xl p-3 shadow-sm bg-purple-50">
         <div className="flex justify-center">
-          <h3 className={`text-lg font-medium text-purple-800 ${cinzel.className}`}>{symbol}</h3>
+          <h3 className={`text-lg font-medium text-purple-800 ${cinzel.className}`}>{symbol} &#10024;</h3>
         </div>
 
         <div className="flex justify-between space-x-6">
@@ -52,7 +52,7 @@ export default async function SupplySummary() {
 
       <div className="rounded-xl p-3 shadow-sm bg-purple-50">
         <div className="flex justify-center">
-          <h3 className="text-lg font-medium text-purple-800">&#128293;</h3>
+          <h3 className={`text-lg font-medium text-purple-800 ${cinzel.className}`}>Burns &#128293;</h3>
         </div>
 
         <div className="flex justify-between space-x-6">
@@ -83,7 +83,7 @@ export default async function SupplySummary() {
       
       <div className="rounded-xl p-2 shadow-sm bg-purple-50">
         <div className="flex justify-center">
-          <h3 className="text-lg font-medium text-purple-800">&#128274;</h3>
+          <h3 className={`text-lg font-medium text-purple-800 ${cinzel.className}`}>Locks &#128274;</h3>
         </div>
 
         <div className="flex justify-between space-x-6">
