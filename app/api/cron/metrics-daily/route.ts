@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export default async function GET(request: Request) {
+export async function GET() {
   // Your code to run periodically goes here
   console.log('Running daily metrics task.');
 
