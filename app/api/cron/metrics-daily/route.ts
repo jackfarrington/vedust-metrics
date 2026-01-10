@@ -6,9 +6,12 @@ import { getMetrics } from "@/lib/metrics";
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
   
+  console.log('Authorizing request...');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    console.log('Unauthorized request.');
     return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
   }
+  console.log('Authorized.');
 
   console.log('Running daily metrics task.');
 
