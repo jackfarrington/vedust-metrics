@@ -40,7 +40,7 @@ export default async function SupplySummary() {
           <span className="text-purple-500">{formatNumber(Number(emittedSupply) / Number(mintedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Circulation</span>
+          <span className="text-purple-800">In circulation</span>
           <span className="text-purple-500">{formatNumber(circulation)}</span>
         </div>
       </div>
