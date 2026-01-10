@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export default async function GET(request: Request) {
   // Your code to run periodically goes here
-  console.log('Running metrics task.');
+  console.log('Running daily metrics task.');
 
   // Example: update a database, fetch data from a third-party API, etc.
 
