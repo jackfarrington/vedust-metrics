@@ -1,5 +1,3 @@
-import { cacheLife } from 'next/cache';
-
 import { ethers } from 'ethers';
 
 import dustAbi from '@/app/abi/dust_abi.json';
@@ -7,7 +5,8 @@ import lockAbi from '@/app/abi/lock_abi.json';
 
 const rpcUrl = process.env.RPC_URL;
 
-const mintedSupply = 100_000_000n;
+export const MINTED_SUPPLY = 100_000_000n;
+
 const dustAddress = "0xAD96C3dffCD6374294e2573A7fBBA96097CC8d7c";
 const dustBurnEscrowAddress = "0x909b176220b7e782C0f3cEccaB4b19D2c433c6BB";
 const dustLockProxyAddress = "0xBB4738D05AD1b3Da57a4881baE62Ce9bb1eEeD6C";
@@ -32,14 +31,11 @@ export interface Metrics {
 }
 
 export async function getMetrics(): Promise<Metrics> {
-  'use cache';
-
-  cacheLife('minutes');
-
   const symbol = await dustContract.symbol();
   const decimals = await dustContract.decimals();
   const divisor = 10n**decimals;
 
+  const mintedSupply = MINTED_SUPPLY;
   const remainingSupply = (await dustContract.totalSupply()) / divisor;
   const burnedSoFar = mintedSupply - remainingSupply;
   const pendingBurn = (await dustContract.balanceOf(dustBurnEscrowAddress)) / divisor;
@@ -64,7 +60,7 @@ export async function getMetrics(): Promise<Metrics> {
 
   const lastUpdate = new Date();
 
-  return {
+  const metrics: Metrics = {
     symbol,
     mintedSupply,
     burnedSoFar,
@@ -77,4 +73,6 @@ export async function getMetrics(): Promise<Metrics> {
     emittedSupply,
     lastUpdate,
   };
+
+  return metrics;
 }

@@ -1,7 +1,9 @@
+import { cacheLife } from 'next/cache';
+
 import { Cinzel } from "next/font/google";
 import { Quicksand } from "next/font/google";
 
-import LastUpdated from "@/components/last-updated";
+import LastUpdated from "@/ui/last-updated";
 import { getMetrics } from "@/lib/metrics";
 import { formatNumber } from "@/lib/utils";
 
@@ -18,7 +20,10 @@ const quicksand = Quicksand({
 });
 
 export default async function SupplySummary() {
-    const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, power, emittedSupply, lastUpdate } = await getMetrics();
+  'use cache';
+
+  cacheLife('minutes');
+  const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, power, emittedSupply, lastUpdate } = await getMetrics();
 
   return (
     <div className={`grid gap-6 ${quicksand.className}`}>

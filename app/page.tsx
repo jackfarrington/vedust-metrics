@@ -1,4 +1,4 @@
-import SupplySummary from '@/components/supply-summary';
+import SupplySummary from '@/ui/supply-summary';
 
 export default async function Home() {
   return (

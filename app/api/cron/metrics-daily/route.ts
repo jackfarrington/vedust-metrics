@@ -1,9 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
-  // Your code to run periodically goes here
+import { getMetrics } from "@/lib/metrics";
+
+export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get('Authorization');
+  
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  }
+  
   console.log('Running daily metrics task.');
 
+  const metrics = await getMetrics();
   // Example: update a database, fetch data from a third-party API, etc.
 
   return NextResponse.json({
