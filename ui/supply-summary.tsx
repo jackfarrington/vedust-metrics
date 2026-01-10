@@ -72,6 +72,10 @@ export default async function SupplySummary() {
           <span className="text-purple-500">{formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div className="flex justify-between space-x-6">
+          <span className="text-purple-800">Burn rate</span>
+          <span className="text-purple-500">{formatNumber((Number(totalBurned) / Number(emittedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        </div>
+        <div className="flex justify-between space-x-6">
           <span className="text-purple-800">Remaining supply</span>
           <span className="text-purple-500">{formatNumber(remainingSupply - pendingBurn)}</span>
         </div>
