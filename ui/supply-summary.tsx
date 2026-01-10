@@ -72,7 +72,7 @@ export default async function SupplySummary() {
           <span className="text-purple-500">{formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Burn rate</span>
+          <span className="text-purple-800">Burn ratio</span>
           <span className="text-purple-500">{formatNumber((Number(totalBurned) / Number(emittedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div className="flex justify-between space-x-6">
@@ -91,8 +91,16 @@ export default async function SupplySummary() {
           <span className="text-purple-500">{formatNumber(locked)}</span>
         </div>
         <div className="flex justify-between space-x-6">
+          <span className="text-purple-800">Lock ratio</span>
+          <span className="text-purple-500">{formatNumber(Number(locked) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        </div>
+        <div className="flex justify-between space-x-6">
           <span className="text-purple-800">veDUST power</span>
           <span className="text-purple-500">{formatNumber(power)}</span>
+        </div>
+        <div className="flex justify-between space-x-6">
+          <span className="text-purple-800">Power ratio</span>
+          <span className="text-purple-500">{formatNumber(Number(power) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
       </div>
 
