@@ -43,6 +43,7 @@ export default async function SupplySummary() {
           ['Emitted so far', formatNumber(emittedSupply)],
           ['Percent emitted', formatNumber(Number(emittedSupply) / Number(mintedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
           ['In circulation', formatNumber(circulation)],
+          ['Circulation ratio', formatNumber(Number(circulation) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
         ]} />
 
         <Card title={`Burns 🔥`} pairs={[
