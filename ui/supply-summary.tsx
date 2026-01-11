@@ -25,7 +25,7 @@ export default async function SupplySummary() {
   'use cache';
 
   cacheLife('minutes');
-  const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, power, emittedSupply, lastUpdate } = await getMetrics();
+  const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, infiniteLocked, power, emittedSupply, lastUpdate } = await getMetrics();
 
   return (
     <div>
@@ -59,6 +59,8 @@ export default async function SupplySummary() {
             ['Lock ratio', formatNumber(Number(locked) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
             ['veDUST power', formatNumber(power)],
             ['Power ratio', formatNumber(Number(power) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+            ['Infinite locked', formatNumber(infiniteLocked)],
+            ['Percent infinite', formatNumber(Number(infiniteLocked) / Number(locked), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
         ]} />
       </div>
 

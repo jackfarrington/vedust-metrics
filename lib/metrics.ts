@@ -25,6 +25,7 @@ export interface Metrics {
   totalBurned: bigint;
   circulation: bigint;
   locked: bigint;
+  infiniteLocked: bigint;
   power: bigint;
   emittedSupply: bigint;
   lastUpdate: Date;
@@ -54,6 +55,7 @@ export async function getMetrics(): Promise<Metrics> {
   const circulation = remainingSupply - uncirculatedBalances.reduce((a, b) => a + b, 0n) / divisor;
 
   const locked = (await lockContract.supply()) / divisor;
+  const infiniteLocked = (await lockContract.permanentLockBalance()) / divisor;
   const power = (await lockContract.totalSupply()) / divisor;
 
   const emittedSupply = totalBurned + locked + circulation;
@@ -69,6 +71,7 @@ export async function getMetrics(): Promise<Metrics> {
     totalBurned,
     circulation,
     locked,
+    infiniteLocked,
     power,
     emittedSupply,
     lastUpdate,
