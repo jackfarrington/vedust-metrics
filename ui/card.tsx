@@ -8,7 +8,7 @@ const cinzel = Cinzel({
 
 export default async function Card({title, pairs}: {title: string, pairs: [string, any][]}) {
   return (
-    <div className="flex flex-col rounded-xl p-3 shadow-sm bg-purple-50 min-w-[16rem]">
+    <div className="flex flex-col rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50 min-w-[16rem]">
       <h3 className={`flex justify-center text-lg font-medium text-purple-800 ${cinzel.className}`}>{title}</h3>
 
       {pairs.map(([label, value]) => (
