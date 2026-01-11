@@ -31,6 +31,13 @@ export default async function SupplySummary() {
     <div>
 
       <div className={`flex flex-wrap justify-center gap-6 ${quicksand.className}`}>
+        <Card title={`Summary 📜`} pairs={[
+          ['Emitted', formatNumber(emittedSupply)],
+          ['Circulating', `${formatNumber(Number(circulation) / Number(emittedSupply), { style: 'percent' })}`],
+          ['Burned', `${formatNumber(Number(totalBurned) / Number(emittedSupply), { style: 'percent' })}`],
+          ['Locked', `${formatNumber(Number(locked) / Number(emittedSupply), { style: 'percent' })}`],
+        ]} />
+
         <Card title={`${symbol} ✨`} pairs={[
           ['Minted', formatNumber(mintedSupply)],
           ['Emitted so far', formatNumber(emittedSupply)],
