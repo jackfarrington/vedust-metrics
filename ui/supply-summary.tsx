@@ -44,7 +44,7 @@ export default async function SupplySummary() {
           ['Total burned', formatNumber(totalBurned)],
           ['Percent burned', formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
           ['Burn ratio', formatNumber((Number(totalBurned) / Number(emittedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
-          ['Remaining supply', formatNumber(remainingSupply)],
+          ['Remaining supply', formatNumber(remainingSupply - pendingBurn)],
         ]} />
 
         <Card title={`Locks 🔒`} pairs={[
