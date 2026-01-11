@@ -1,11 +1,13 @@
 import { cacheLife } from 'next/cache';
 
-import { Cinzel } from "next/font/google";
+import { Cinzel } from "next/font/google"; // TODO: remove this import
 import { Quicksand } from "next/font/google";
 
+import Card from '@/ui//card';
 import LastUpdated from "@/ui/last-updated";
 import { getMetrics } from "@/lib/metrics";
 import { formatNumber } from "@/lib/utils";
+
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -26,88 +28,37 @@ export default async function SupplySummary() {
   const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, power, emittedSupply, lastUpdate } = await getMetrics();
 
   return (
-    <div className={`grid gap-6 ${quicksand.className}`}>
-      <div className="rounded-xl p-3 shadow-sm bg-purple-50">
-        <div className="flex justify-center">
-          <h3 className={`text-lg font-medium text-purple-800 ${cinzel.className}`}>{symbol} &#10024;</h3>
-        </div>
+    <div>
 
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Minted</span>
-          <span className="text-purple-500">{formatNumber(mintedSupply)}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Emitted so far</span>
-          <span className="text-purple-500">{formatNumber(emittedSupply)}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Percent emitted</span>
-          <span className="text-purple-500">{formatNumber(Number(emittedSupply) / Number(mintedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">In circulation</span>
-          <span className="text-purple-500">{formatNumber(circulation)}</span>
-        </div>
+      <div className={`flex flex-wrap justify-center gap-6 ${quicksand.className}`}>
+        <Card title={`${symbol} ✨`} pairs={[
+          ['Minted', formatNumber(mintedSupply)],
+          ['Emitted so far', formatNumber(emittedSupply)],
+          ['Percent emitted', formatNumber(Number(emittedSupply) / Number(mintedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+          ['In circulation', formatNumber(circulation)],
+        ]} />
+
+        <Card title={`Burns 🔥`} pairs={[
+          ['Burned so far', formatNumber(burnedSoFar)],
+          ['Pending burn', formatNumber(pendingBurn)],
+          ['Total burned', formatNumber(totalBurned)],
+          ['Percent burned', formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+          ['Burn ratio', formatNumber((Number(totalBurned) / Number(emittedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+          ['Remaining supply', formatNumber(remainingSupply)],
+        ]} />
+
+        <Card title={`Locks 🔒`} pairs={[
+            ['veDUST locked', formatNumber(locked)],
+            ['Lock ratio', formatNumber(Number(locked) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+            ['veDUST power', formatNumber(power)],
+            ['Power ratio', formatNumber(Number(power) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+        ]} />
       </div>
 
-      <div className="rounded-xl p-3 shadow-sm bg-purple-50">
-        <div className="flex justify-center">
-          <h3 className={`text-lg font-medium text-purple-800 ${cinzel.className}`}>Burns &#128293;</h3>
-        </div>
-
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Burned so far</span>
-          <span className="text-purple-500">{formatNumber(burnedSoFar)}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Pending burn</span>
-          <span className="text-purple-500">{formatNumber(pendingBurn)}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Total burned</span>
-          <span className="text-purple-500">{formatNumber(totalBurned)}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Percent burned</span>
-          <span className="text-purple-500">{formatNumber((Number(totalBurned) / Number(mintedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Burn ratio</span>
-          <span className="text-purple-500">{formatNumber((Number(totalBurned) / Number(emittedSupply)), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Remaining supply</span>
-          <span className="text-purple-500">{formatNumber(remainingSupply - pendingBurn)}</span>
-        </div>
-      </div>
-      
-      <div className="rounded-xl p-2 shadow-sm bg-purple-50">
-        <div className="flex justify-center">
-          <h3 className={`text-lg font-medium text-purple-800 ${cinzel.className}`}>Locks &#128274;</h3>
-        </div>
-
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">veDUST locked</span>
-          <span className="text-purple-500">{formatNumber(locked)}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Lock ratio</span>
-          <span className="text-purple-500">{formatNumber(Number(locked) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">veDUST power</span>
-          <span className="text-purple-500">{formatNumber(power)}</span>
-        </div>
-        <div className="flex justify-between space-x-6">
-          <span className="text-purple-800">Power ratio</span>
-          <span className="text-purple-500">{formatNumber(Number(power) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-        </div>
-      </div>
-
-      <div className={cinzel.className}>
+      <div className={`flex items-center justify-center mt-6 ${cinzel.className}`}>
         <LastUpdated timestamp={lastUpdate} />
       </div>
-      
+
     </div>
   );
 }
