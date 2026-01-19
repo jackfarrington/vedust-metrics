@@ -46,10 +46,10 @@ export async function getMetrics(): Promise<Metrics> {
     await dustContract.balanceOf("0xe72df2DDE84880DD706C5976E92ed34BB586A38F"),
     await dustContract.balanceOf("0x003F5393F4836f710d492AD98D89F5BFCCF1C962"),
     await dustContract.balanceOf("0xb83a6637c87E6a7192b3ADA845c0745F815e9006"),
-    await dustContract.balanceOf("0xBB4738D05AD1b3Da57a4881baE62Ce9bb1eEeD6C"),
+    await dustContract.balanceOf(dustLockProxyAddress),
     await dustContract.balanceOf("0x6BB849D8D8D58d95323504444779d8E5cDAa4026"),
     await dustContract.balanceOf("0x178D5F48a27f728E24e7d530a7c5c901778AAdE7"),
-    await dustContract.balanceOf("0x909b176220b7e782C0f3cEccaB4b19D2c433c6BB"),
+    await dustContract.balanceOf(dustBurnEscrowAddress),
   ]);
 
   const circulation = remainingSupply - uncirculatedBalances.reduce((a, b) => a + b, 0n) / divisor;
