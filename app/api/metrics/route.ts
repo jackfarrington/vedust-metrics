@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
     addGauge('power', 'veDUST power', metrics.power);
     addGauge('emitted_supply', 'DUST emitted so far', metrics.emittedSupply);
 
+    lines.push('# EOF');
 
     const metricsText = lines.join('\n') + '\n';
 
