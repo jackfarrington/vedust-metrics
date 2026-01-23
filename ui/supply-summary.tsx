@@ -62,6 +62,7 @@ export default async function SupplySummary() {
             ['Power ratio', formatNumber(Number(power) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
             ['Infinite locked', formatNumber(infiniteLocked)],
             ['Percent infinite', formatNumber(Number(infiniteLocked) / Number(locked), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+            ['Infinite ratio', formatNumber(Number(infiniteLocked) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
         ]} />
       </div>
 
