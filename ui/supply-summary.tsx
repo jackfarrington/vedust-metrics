@@ -24,7 +24,7 @@ const quicksand = Quicksand({
 export default async function SupplySummary() {
   'use cache';
 
-  cacheLife({ stale: 60, revalidate: 60, expire: 600 });
+  cacheLife({ stale: 60, revalidate: 60, expire: 60 });
   const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, infiniteLocked, power, emittedSupply, lastUpdate } = await getMetrics();
 
   return (

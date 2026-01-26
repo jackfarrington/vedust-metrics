@@ -23,7 +23,7 @@ export default function LastUpdated({ timestamp }: LastUpdatedProps) {
       } else if (seconds < 3600) {
         const minutes = Math.floor(seconds / 60);
         newText = `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-      } else if (seconds < 86400) {
+      } else {
         const hours = Math.floor(seconds / 3600);
         newText = `${hours} hour${hours === 1 ? '' : 's'} ago`;
       }
