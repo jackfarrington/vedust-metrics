@@ -32,6 +32,7 @@ export interface Metrics {
   power: bigint;
   emittedSupply: bigint;
   lastUpdate: Date;
+  price: number;
 }
 
 export async function getMetrics(): Promise<Metrics> {
@@ -57,6 +58,10 @@ export async function getMetrics(): Promise<Metrics> {
 
   const lastUpdate = new Date();
 
+  const [priceDigits, isOracle] = await helperContract.getPrice();
+
+  const price = isOracle ? Number(priceDigits) / 10 ** 8 : Number(priceDigits) / 10 ** 18;
+
   const metrics: Metrics = {
     symbol,
     mintedSupply,
@@ -70,6 +75,7 @@ export async function getMetrics(): Promise<Metrics> {
     power,
     emittedSupply,
     lastUpdate,
+    price,
   };
 
   return metrics;

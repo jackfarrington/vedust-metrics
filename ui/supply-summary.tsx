@@ -25,7 +25,7 @@ export default async function SupplySummary() {
   'use cache';
 
   cacheLife({ stale: 60, revalidate: 60, expire: 60 });
-  const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, infiniteLocked, power, emittedSupply, lastUpdate } = await getMetrics();
+  const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, infiniteLocked, power, emittedSupply, lastUpdate, price } = await getMetrics();
 
   return (
     <div>
@@ -44,6 +44,7 @@ export default async function SupplySummary() {
           ['Percent emitted', formatNumber(Number(emittedSupply) / Number(mintedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
           ['In circulation', formatNumber(circulation)],
           ['Circulation ratio', formatNumber(Number(circulation) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+          ['Price', `$${price.toFixed(4)}`],
         ]} />
 
         <Card title={`Burns 🔥`} pairs={[
