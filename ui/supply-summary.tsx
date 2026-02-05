@@ -44,7 +44,7 @@ export default async function SupplySummary() {
           ['Percent emitted', formatNumber(Number(emittedSupply) / Number(mintedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
           ['In circulation', formatNumber(circulation)],
           ['Circulation ratio', formatNumber(Number(circulation) / Number(emittedSupply), { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })],
-          ['Price', `$${price.toFixed(4)}`],
+          ['Price', `$${formatNumber(price, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`],
         ]} />
 
         <Card title={`Burns 🔥`} pairs={[
