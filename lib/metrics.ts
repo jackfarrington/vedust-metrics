@@ -1,3 +1,5 @@
+import "server-only";
+
 import { ethers } from 'ethers';
 
 import dustAbi from '@/app/abi/dust_abi.json';
@@ -48,7 +50,7 @@ export async function getMetrics(): Promise<Metrics> {
 
   const teamTotalBalance = await helperContract.getTeamTotalBalance();
 
-  const circulation = remainingSupply - teamTotalBalance / divisor;
+  const circulation = remainingSupply - (teamTotalBalance / divisor);
 
   const locked = (await lockContract.supply()) / divisor;
   const infiniteLocked = (await lockContract.permanentLockBalance()) / divisor;
@@ -60,7 +62,7 @@ export async function getMetrics(): Promise<Metrics> {
 
   const [priceDigits, isOracle] = await helperContract.getPrice();
 
-  const price = isOracle ? Number(priceDigits) / 10 ** 8 : Number(priceDigits) / 10 ** 18;
+  const price = isOracle ? Number(priceDigits) / 10**8 : Number(priceDigits) / 10**18;
 
   const metrics: Metrics = {
     symbol,

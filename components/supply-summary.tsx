@@ -3,10 +3,10 @@ import { cacheLife } from 'next/cache';
 import { Cinzel } from "next/font/google"; // TODO: remove this import
 import { Quicksand } from "next/font/google";
 
-import Card from '@/ui//card';
-import LastUpdated from "@/ui/last-updated";
+import Card from '@/components/card';
+import LastUpdated from "@/components/last-updated";
 import { getMetrics } from "@/lib/metrics";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber } from "@/lib/util";
 
 
 const cinzel = Cinzel({

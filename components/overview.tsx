@@ -1,0 +1,68 @@
+import { Cinzel } from "next/font/google";
+import { Quicksand } from "next/font/google";
+
+import { type Portfolio } from "@/lib/portfolio";
+import { formatNumber } from "@/lib/util";
+
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-cinzel",
+});
+
+const quicksand = Quicksand({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-quicksand',
+});
+
+type OverviewProps = {
+  readonly dustPrice: number;
+  readonly portfolio: Portfolio;
+  readonly usdcRewards: number;
+  readonly totalPower: number;
+};
+
+export default async function Overview({
+  dustPrice,
+  portfolio,
+  usdcRewards,
+  totalPower,
+} : OverviewProps) {
+  const dustLocked = portfolio.positions.reduce((acc, next) => acc + next.lock.dust, 0);
+  const totalDust = portfolio.tokens.dust + portfolio.accruals.dust + dustLocked;
+  const netAccountValue = totalDust * dustPrice;
+  const pendingLockRewards = usdcRewards * portfolio.positions.reduce((dustPower, next) => dustPower + next.lock.power, 0) / totalPower;
+
+  return (
+    <div className={`${quicksand.className} rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50`}>
+      <h3 className={`flex justify-center text-xl font-medium text-purple-800 ${cinzel.className}`}>Overview</h3>
+      <div className="flex flex-wrap justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-purple-800">DUST</p>
+          <p className="text-sm text-purple-500">${formatNumber(dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-purple-800">Held</p>
+          <p className="text-sm text-purple-500">{formatNumber(portfolio.tokens.dust, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}<span className="text-xs"> ≈ ${formatNumber(portfolio.tokens.dust * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
+        </div>
+        <div className="flex flex-col justify-between">
+          <p className="text-sm font-medium text-purple-800">Accrued</p>
+          <p className="text-sm text-purple-500">{formatNumber(portfolio.accruals.dust, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span className="text-xs"> ≈ ${formatNumber(portfolio.accruals.dust * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
+        </div>
+        <div className="flex flex-col justify-between">
+          <p className="text-sm font-medium text-purple-800">Locked</p>
+          <p className="text-sm text-purple-500">{formatNumber(dustLocked, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}<span className="text-xs"> ≈ ${formatNumber(dustLocked * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-purple-800">Total Value</p>
+          <p className="text-sm text-purple-500">${formatNumber(netAccountValue, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-purple-800">Epoch Earnings</p>
+          <p className={`text-sm text-purple-500`}>~${formatNumber(pendingLockRewards, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
