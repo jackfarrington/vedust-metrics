@@ -9,7 +9,6 @@ import {
   DUST_TOKEN,
   MON_TOKEN,
   WMON_TOKEN,
-  DUST_LOCK_PROXY_ADDRESS,
   UNISWAP_QUOTER_ADDRESS,
 } from "@/lib/addresses";
 import { publicClient } from "@/lib/chain";
@@ -18,7 +17,7 @@ import {
   dustLockContract,
   neverlandUiProviderContract,
 } from "@/lib/contracts";
-import { fetchWithRetry, getQueryString, tokenToNumber } from "@/lib/util";
+import { tokenToNumber } from "@/lib/util";
 
 export type Portfolio = {
   readonly account: Address;
@@ -44,45 +43,31 @@ type Lock = {
   readonly isPermanent: boolean;
 };
 
-export async function getLocks(account: Address): Promise<bigint[]> {
-  let magicEdenUrl = new URL("https://api-mainnet.magiceden.dev/v4/evm-public/assets/user-assets");
-  const params = {
-    chain: "monad",
-    walletAddresses: [account],
-    collectionIds: [DUST_LOCK_PROXY_ADDRESS.toLowerCase()],
-    sortBy: "receivedAt",
-    sortDir: "desc",
-    limit: "100",
-  };
-  magicEdenUrl.search = getQueryString(params);
+type NeverlandUseerDashboard = {
+  user: Address;
+  tokenIds: readonly bigint[];
+  locks: readonly NeverlandVedustLock[];
+  rewardSummaries: readonly {
+    tokenId: bigint;
+    revenueRewards: readonly bigint[];
+    rewardTokens: readonly Address[];
+  }[];
+  totalVotingPower: bigint;
+  totalLockedAmount: bigint;
+};
 
-  let assets: any[] = [];
-  try {
-    let continuation: string | undefined;
-    let json: any;
-    do {
-      const response = await fetchWithRetry(magicEdenUrl);
-      if (!response.ok) throw new Error(`Magic Eden API error: ${response.status}`);
-      json = await response.json();
-      assets = assets.concat(json["assets"].map((obj: any) => { return obj["asset"]}));
-      continuation = json["continuation"];
-      if (continuation && json["assets"].length === 100) {
-        magicEdenUrl.searchParams.set("continuation", continuation);
-      }
-    } while (continuation && json["assets"].length === 100);
-  } catch (error) {
-    console.error("Error fetching Magic Eden listings:", error);
-    throw error;
-  }
-
-  return assets
-    .map((asset: any) => BigInt(asset.tokenId))
-    .toSorted((a: bigint, b: bigint) => Number(a - b));
-}
+type NeverlandVedustLock = {
+  tokenId: bigint;
+  amount: bigint;
+  end: bigint;
+  effectiveStart: bigint;
+  isPermanent: boolean;
+  votingPower: bigint;
+  rewardReceiver: Address;
+  owner: Address;
+};
 
 export async function getPortfolio(address: Address): Promise<Portfolio> {
-
-  const ids = await getLocks(address);
 
   const [dust, mon, [addresses, amounts]] = await Promise.all([
     dustContract.read.balanceOf([address]),
@@ -93,20 +78,25 @@ export async function getPortfolio(address: Address): Promise<Portfolio> {
   const idx = addresses.findIndex(addr => addr === DUST_TOKEN.address);
   const dustAccrued = idx < 0 ? 0n : amounts[idx];
 
-  const positions: Position[] = await Promise.all(
-    ids.map((id) =>
-      getDustLocked(id)
-        .then(({ id, dust, power, daysToUnlock, isPermanent }) => ({
-          lock: {
-            id,
-            dust,
-            power,
-            daysToUnlock,
-            isPermanent,
-          },
-        }))
-    )
-  );
+  let locks: NeverlandVedustLock[] = [];
+  let dashboard: NeverlandUseerDashboard;
+  let offset = 0n;
+  const limit = 20n;
+  do {
+    dashboard = await neverlandUiProviderContract.read.getUserDashboard([address, offset, limit]);
+    locks = locks.concat(dashboard.locks);
+    offset += limit;
+  } while (dashboard.locks.length > 0);
+
+  const positions: Position[] = locks.map((lock) => ({
+    lock: {
+      id: lock.tokenId.toString(),
+      dust: tokenToNumber(lock.amount, DUST_TOKEN.decimals),
+      power: tokenToNumber(lock.votingPower, DUST_TOKEN.decimals),
+      daysToUnlock: Math.max(0, Math.floor((Number(lock.end) - Date.now() / 1000) / 86400)),
+      isPermanent: lock.isPermanent,
+    },
+  }));
 
   const portfolio: Portfolio = {
     account: address,
