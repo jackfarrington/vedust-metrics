@@ -76,26 +76,26 @@ function formatDuration(seconds: number): string {
   const minutes = Math.floor((seconds % 3600) / 60);
 
   if (days >= 2) {
-    return `${days} days`;
+    return `${days}d`;
   }
   
   if (days === 1) {
     if (hours > 0) {
-      return `1 day, ${hours} hr${hours === 1 ? '' : 's'}`;
+      return `1d ${hours}h`;
     }
-    return '1 day';
+    return '1d';
   }
   
   if (seconds > 12 * 3600) {
-    return `${hours} hr${hours === 1 ? '' : 's'}`; 
+    return `${hours}h`;
   }
 
   if (seconds > 3600) {
     if (minutes > 0) {
-      return `${hours} hr${hours === 1 ? '' : 's'}, ${minutes} min${minutes === 1 ? '' : 's'}`;
+      return `${hours}h ${minutes}m`;
     }
-    return `${hours} hr${hours === 1 ? '' : 's'}`;
+    return `${hours}h`;
   }
 
-  return `${minutes} min${minutes === 1 ? '' : 's'}`;
+  return `${minutes}m`;
 }
