@@ -5,29 +5,24 @@ import { type Address } from "viem";
 import uniswapQuoterAbi from '@/lib/abi/uniswap/uniswap_quoter';
 import {
   USDC_TOKEN,
-  AUSD_TOKEN,
   DUST_TOKEN,
-  MON_TOKEN,
-  WMON_TOKEN,
   UNISWAP_QUOTER_ADDRESS,
 } from "@/lib/addresses";
 import { publicClient } from "@/lib/chain";
 import {
   dustContract,
   dustLockContract,
+  neverlandDustHelperContract,
   neverlandUiProviderContract,
 } from "@/lib/contracts";
 import { tokenToNumber } from "@/lib/util";
 
 export type Portfolio = {
   readonly account: Address;
-  readonly tokens: {
-    readonly dust: number;
-    readonly mon: number;
-  },
-  readonly accruals: {
-    readonly dust: number;
-  },
+  readonly dust: {
+    held: number;
+    accrued: number;
+  };
   readonly positions: Position[];
 };
 
@@ -69,9 +64,8 @@ type NeverlandVedustLock = {
 
 export async function getPortfolio(address: Address): Promise<Portfolio> {
 
-  const [dust, mon, [addresses, amounts]] = await Promise.all([
+  const [dust, [addresses, amounts]] = await Promise.all([
     dustContract.read.balanceOf([address]),
-    publicClient.getBalance({ address }),
     neverlandUiProviderContract.read.getUserEmissions([address]),
   ]);
 
@@ -100,12 +94,9 @@ export async function getPortfolio(address: Address): Promise<Portfolio> {
 
   const portfolio: Portfolio = {
     account: address,
-    tokens: {
-      dust: tokenToNumber(dust, DUST_TOKEN.decimals),
-      mon: tokenToNumber(mon, MON_TOKEN.decimals),
-    },
-    accruals: {
-      dust: tokenToNumber(dustAccrued, DUST_TOKEN.decimals),
+    dust: {
+      held: tokenToNumber(dust, DUST_TOKEN.decimals),
+      accrued: tokenToNumber(dustAccrued, DUST_TOKEN.decimals),
     },
     positions,
   };
@@ -129,21 +120,9 @@ export async function getDustLocked(id: bigint): Promise<Lock> {
 }
 
 export async function getDustPrice(): Promise<number> {
-  return await quoteExactInputSingle(
-    DUST_TOKEN.address as Address,
-    AUSD_TOKEN.address as Address,
-    BigInt(1 * 10**DUST_TOKEN.decimals),
-    10000, // 1.0%
-  ).then((amountOut) => tokenToNumber(amountOut, AUSD_TOKEN.decimals));
-}
+  const [priceDigits, isOracle] = await neverlandDustHelperContract.read.getPrice();
 
-export async function getMonPrice(): Promise<number> {
-  return await quoteExactInputSingle(
-    WMON_TOKEN.address as Address,
-    USDC_TOKEN.address as Address,
-    BigInt(1 * 10**WMON_TOKEN.decimals),
-    500, // 0.05%
-  ).then((amountOut) => tokenToNumber(amountOut, USDC_TOKEN.decimals));
+  return isOracle ? Number(priceDigits) / 10**8 : Number(priceDigits) / 10**18;
 }
 
 export async function getPendingRewards(): Promise<{ totalPower: number, usdcRewards: number }> {

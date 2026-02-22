@@ -30,7 +30,7 @@ export default async function Overview({
   totalPower,
 } : OverviewProps) {
   const dustLocked = portfolio.positions.reduce((acc, next) => acc + next.lock.dust, 0);
-  const totalDust = portfolio.tokens.dust + portfolio.accruals.dust + dustLocked;
+  const totalDust = portfolio.dust.held + portfolio.dust.accrued + dustLocked;
   const netAccountValue = totalDust * dustPrice;
   const pendingLockRewards = usdcRewards * portfolio.positions.reduce((dustPower, next) => dustPower + next.lock.power, 0) / totalPower;
 
@@ -44,11 +44,11 @@ export default async function Overview({
         </div>
         <div>
           <p className="text-sm font-medium text-purple-800">Held</p>
-          <p className="text-sm text-purple-500">{formatNumber(portfolio.tokens.dust, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}<span className="text-xs"> ≈ ${formatNumber(portfolio.tokens.dust * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
+          <p className="text-sm text-purple-500">{formatNumber(portfolio.dust.held, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}<span className="text-xs"> ≈ ${formatNumber(portfolio.dust.held * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
         </div>
         <div className="flex flex-col justify-between">
           <p className="text-sm font-medium text-purple-800">Accrued</p>
-          <p className="text-sm text-purple-500">{formatNumber(portfolio.accruals.dust, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span className="text-xs"> ≈ ${formatNumber(portfolio.accruals.dust * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
+          <p className="text-sm text-purple-500">{formatNumber(portfolio.dust.accrued, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span className="text-xs"> ≈ ${formatNumber(portfolio.dust.accrued * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
         </div>
         <div className="flex flex-col justify-between">
           <p className="text-sm font-medium text-purple-800">Locked</p>
