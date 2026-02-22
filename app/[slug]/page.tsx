@@ -41,7 +41,7 @@ export default async function Page({ params }: PageProps) {
         <div className="flex flex-col gap-6 w-full max-w-4xl">
           <h1 className="text-xs text-center text-purple-300">{address}</h1>
           <Overview dustPrice={dustPrice} portfolio={portfolio} usdcRewards={usdcRewards} totalPower={totalPower} />
-          <Positions dustPrice={dustPrice} positions={portfolio.positions} />
+          <Positions dustPrice={dustPrice} positions={portfolio.locks} />
         </div>
       : <p className="text-sm text-red-500">Enter a valid address</p>}
     </div>    

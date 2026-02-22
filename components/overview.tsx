@@ -29,10 +29,16 @@ export default async function Overview({
   usdcRewards,
   totalPower,
 } : OverviewProps) {
-  const dustLocked = portfolio.positions.reduce((acc, next) => acc + next.lock.dust, 0);
+  const { dustUnits, powerUnits } = portfolio.locks.reduce(({ dustUnits, powerUnits }, next) => {
+    return {
+      dustUnits: dustUnits + next.amount,
+      powerUnits: powerUnits + next.votingPower,
+    }
+  }, { dustUnits: 0n, powerUnits: 0n });
+  const dustLocked = Number(dustUnits) / 10**18;
   const totalDust = portfolio.dust.held + portfolio.dust.accrued + dustLocked;
   const netAccountValue = totalDust * dustPrice;
-  const pendingLockRewards = usdcRewards * portfolio.positions.reduce((dustPower, next) => dustPower + next.lock.power, 0) / totalPower;
+  const pendingLockRewards = usdcRewards * Number(powerUnits) / 10**18 / totalPower;
 
   return (
     <div className={`${quicksand.className} rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50`}>

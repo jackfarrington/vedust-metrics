@@ -1,7 +1,7 @@
 import { Cinzel } from "next/font/google";
 import { Quicksand } from "next/font/google";
 
-import { type Position } from "@/lib/portfolio";
+import { type Lock } from "@/lib/portfolio";
 import { formatNumber } from "@/lib/util";
 
 const cinzel = Cinzel({
@@ -18,7 +18,7 @@ const quicksand = Quicksand({
 
 type PositionsProps = {
   dustPrice: number;
-  positions: Position[];
+  positions: Lock[];
 };
 
 export default async function Positions({
@@ -28,7 +28,7 @@ export default async function Positions({
 
   return (
     <div className={`${quicksand.className} rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50`}>
-      <h3 className={`flex justify-center text-xl text-purple-800 ${cinzel.className}`}>Positions &nbsp;<span className="text-purple-500">({positions.length})</span></h3>
+      <h3 className={`flex justify-center text-xl text-purple-800 ${cinzel.className}`}>Positions<span className="text-purple-500 ml-1">({positions.length})</span></h3>
 
       {positions.length > 0 ? (
         <div className="overflow-x-auto">
@@ -42,14 +42,17 @@ export default async function Positions({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {positions.toSorted((a, b) => Number(Number(a.lock.id) - Number(b.lock.id))).map(({ lock: { id, dust, daysToUnlock, isPermanent } }) => (
-              <tr key={id}>
-                <td className="px-4 py-3 font-mono text-purple-500">{id}</td>
-                <td className="px-4 py-3 text-right text-purple-500">{formatNumber(Math.floor(dust))}</td>
-                <td className="px-4 py-3 text-right text-purple-500">${formatNumber(dust * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="px-4 py-3 text-right text-purple-500">{isPermanent ? '∞' : daysToUnlock > 0 ? daysToUnlock : 'None'}</td>
-              </tr>
-              ))}
+              {positions.toSorted((a, b) => Number(Number(a.tokenId) - Number(b.tokenId))).map(({ tokenId, amount, effectiveStart, end, isPermanent }) => {
+                const dust = Number(amount / 10n**18n);
+                const daysToUnlock = Math.max(0, Math.floor((Number(end) - Date.now() / 1000) / 86400));
+                return (
+                <tr key={tokenId}>
+                  <td className="px-4 py-3 font-mono text-purple-500">{tokenId}</td>
+                  <td className="px-4 py-3 text-right text-purple-500">{formatNumber(Math.floor(dust))}</td>
+                  <td className="px-4 py-3 text-right text-purple-500">${formatNumber(dust * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-3 text-right text-purple-500">{isPermanent ? '∞' : daysToUnlock > 0 ? daysToUnlock : 'None'}</td>
+                </tr>
+              )})}
             </tbody>
           </table>
         </div>

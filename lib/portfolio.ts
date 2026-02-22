@@ -2,16 +2,12 @@ import "server-only";
 
 import { type Address } from "viem";
 
-import uniswapQuoterAbi from '@/lib/abi/uniswap/uniswap_quoter';
 import {
   USDC_TOKEN,
   DUST_TOKEN,
-  UNISWAP_QUOTER_ADDRESS,
 } from "@/lib/addresses";
-import { publicClient } from "@/lib/chain";
 import {
   dustContract,
-  dustLockContract,
   neverlandDustHelperContract,
   neverlandUiProviderContract,
 } from "@/lib/contracts";
@@ -23,25 +19,13 @@ export type Portfolio = {
     held: number;
     accrued: number;
   };
-  readonly positions: Position[];
-};
-
-export type Position = {
-  readonly lock: Lock;
-}
-
-type Lock = {
-  readonly id: string;
-  readonly dust: number;
-  readonly power: number;
-  readonly daysToUnlock: number;
-  readonly isPermanent: boolean;
+  readonly locks: Lock[];
 };
 
 type NeverlandUseerDashboard = {
   user: Address;
   tokenIds: readonly bigint[];
-  locks: readonly NeverlandVedustLock[];
+  locks: readonly Lock[];
   rewardSummaries: readonly {
     tokenId: bigint;
     revenueRewards: readonly bigint[];
@@ -51,7 +35,7 @@ type NeverlandUseerDashboard = {
   totalLockedAmount: bigint;
 };
 
-type NeverlandVedustLock = {
+export type Lock = {
   tokenId: bigint;
   amount: bigint;
   end: bigint;
@@ -72,7 +56,7 @@ export async function getPortfolio(address: Address): Promise<Portfolio> {
   const idx = addresses.findIndex(addr => addr === DUST_TOKEN.address);
   const dustAccrued = idx < 0 ? 0n : amounts[idx];
 
-  let locks: NeverlandVedustLock[] = [];
+  let locks: Lock[] = [];
   let dashboard: NeverlandUseerDashboard;
   let offset = 0n;
   const limit = 20n;
@@ -82,41 +66,16 @@ export async function getPortfolio(address: Address): Promise<Portfolio> {
     offset += limit;
   } while (dashboard.locks.length > 0);
 
-  const positions: Position[] = locks.map((lock) => ({
-    lock: {
-      id: lock.tokenId.toString(),
-      dust: tokenToNumber(lock.amount, DUST_TOKEN.decimals),
-      power: tokenToNumber(lock.votingPower, DUST_TOKEN.decimals),
-      daysToUnlock: Math.max(0, Math.floor((Number(lock.end) - Date.now() / 1000) / 86400)),
-      isPermanent: lock.isPermanent,
-    },
-  }));
-
   const portfolio: Portfolio = {
     account: address,
     dust: {
       held: tokenToNumber(dust, DUST_TOKEN.decimals),
       accrued: tokenToNumber(dustAccrued, DUST_TOKEN.decimals),
     },
-    positions,
+    locks,
   };
 
   return portfolio;
-}
-
-export async function getDustLocked(id: bigint): Promise<Lock> {
-  const [lock, power] = await Promise.all([
-    dustLockContract.read.locked([id]),
-    dustLockContract.read.balanceOfNFT([id])
-  ]);
-
-  return {
-    id: id.toString(),
-    dust: tokenToNumber(lock.amount, DUST_TOKEN.decimals),
-    power: tokenToNumber(power, DUST_TOKEN.decimals),
-    daysToUnlock: Math.max(0, Math.floor((Number(lock.end) - Date.now() / 1000) / 86400)),
-    isPermanent: lock.isPermanent,
-  };
 }
 
 export async function getDustPrice(): Promise<number> {
@@ -135,31 +94,4 @@ export async function getPendingRewards(): Promise<{ totalPower: number, usdcRew
     totalPower: tokenToNumber(globalStats.totalVotingPower, DUST_TOKEN.decimals),
     usdcRewards: tokenToNumber(marketData.nextEpochRewards[0], USDC_TOKEN.decimals),
   } 
-}
-
-async function quoteExactInputSingle(
-  tokenIn: Address,
-  tokenOut: Address,
-  amountIn: bigint,
-  fee: number,
-  sqrtPriceLimitX96: bigint = 0n
-): Promise<bigint> {
-
-  const [amountOut, _sqrtPriceX96After, _initializedTicksCrossed, _gasEstimate] =
-    await publicClient.readContract({
-      address: UNISWAP_QUOTER_ADDRESS as Address,
-      abi: uniswapQuoterAbi,
-      functionName: 'quoteExactInputSingle',
-      args: [
-        [
-          tokenIn,
-          tokenOut,
-          amountIn,
-          fee,
-          sqrtPriceLimitX96,
-        ],
-      ],
-    }) as [bigint, bigint, number, bigint];
-
-  return amountOut;
 }
