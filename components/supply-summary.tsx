@@ -1,25 +1,9 @@
 import { cacheLife } from 'next/cache';
 
-import { Cinzel } from "next/font/google"; // TODO: remove this import
-import { Quicksand } from "next/font/google";
-
 import Card from '@/components/card';
 import LastUpdated from "@/components/last-updated";
 import { getMetrics } from "@/lib/metrics";
 import { formatNumber } from "@/lib/util";
-
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-cinzel",
-});
-
-const quicksand = Quicksand({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-quicksand',
-});
 
 export default async function SupplySummary() {
   'use cache';
@@ -30,7 +14,7 @@ export default async function SupplySummary() {
   return (
     <div>
 
-      <div className={`flex flex-wrap justify-center gap-6 ${quicksand.className}`}>
+      <div className="flex flex-wrap justify-center gap-6 font-body">
         <Card title={`Summary 📜`} pairs={[
           ['Emitted', formatNumber(emittedSupply)],
           ['Circulating', `${formatNumber(Number(circulation) / Number(emittedSupply), { style: 'percent' })}`],
@@ -67,7 +51,7 @@ export default async function SupplySummary() {
         ]} />
       </div>
 
-      <div className={`flex items-center justify-center mt-6 ${cinzel.className}`}>
+      <div className="flex items-center justify-center mt-6 font-heading">
         <LastUpdated timestamp={lastUpdate} />
       </div>
 

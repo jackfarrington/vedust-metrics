@@ -1,20 +1,5 @@
-import { Cinzel } from "next/font/google";
-import { Quicksand } from "next/font/google";
-
 import { type Portfolio } from "@/lib/portfolio";
 import { formatNumber } from "@/lib/util";
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-cinzel",
-});
-
-const quicksand = Quicksand({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-quicksand',
-});
 
 type OverviewProps = {
   readonly dustPrice: number;
@@ -41,8 +26,8 @@ export default async function Overview({
   const pendingLockRewards = usdcRewards * Number(powerUnits) / 10**18 / totalPower;
 
   return (
-    <div className={`${quicksand.className} rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50`}>
-      <h3 className={`flex justify-center text-xl font-medium text-purple-800 ${cinzel.className}`}>Overview</h3>
+    <div className="font-body rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50">
+      <h3 className="flex justify-center text-xl font-medium text-purple-800 font-heading">Overview</h3>
       <div className="flex flex-wrap justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-purple-800">DUST</p>
