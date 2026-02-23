@@ -3,102 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { type Address, createPublicClient, defineChain, getContract, http } from "viem";
-
-import { DUST_LOCK_PROXY_ADDRESS } from "@/lib/addresses";
+import { dustLockContract } from "@/lib/contracts";
 import { formatDuration, formatNumber } from "@/lib/util";
-
-import dustLockAbi from "@/lib/abi/neverland/dust_lock";
-
-const monad = defineChain({
-  id: 143,
-  name: "Monad",
-  nativeCurrency: { name: "Monad", symbol: "MON", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.monad.xyz"] } },
-  blockExplorers: {
-    default: { name: 'MonadVision', url: 'https://monadvision.com' },
-  },
-  contracts: {
-    multicall3: {
-      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
-    },
-  },
-});
-
-const publicClient = createPublicClient({
-  chain: monad,
-  transport: http("https://rpc.monad.xyz"),
-  batch: {
-    multicall: true,
-  },
-});
-
-export const dustLockContract = getContract({
-  address: DUST_LOCK_PROXY_ADDRESS as Address,
-  abi: dustLockAbi,
-  client: {
-    public: publicClient,
-  },
-});
-  
-type Lock = {
-  tokenId: bigint;
-  amount: bigint;
-  effectiveStart: bigint;
-  end: bigint;
-  isPermanent: boolean;
-};
-
-type LocksPage = {
-  locks: Lock[];
-  page: number;
-  pageSize: number;
-  totalPages: number;
-};  
-
-async function getLocksPage(
-  page: number,
-  pageSize = 20,
-): Promise<LocksPage> {
-  const latestTokenId = await dustLockContract.read.tokenId();
-  
-  const totalPositions = Number(latestTokenId);
-  
-  if (!Number.isFinite(totalPositions) || totalPositions <= 0) {
-    return {
-      locks: [],
-      page: 1,
-      pageSize,
-      totalPages: 1,
-    };
-  }
-
-  const totalPages = Math.max(1, Math.ceil(totalPositions / pageSize));
-  const safePage = Math.min(Math.max(1, page || 1), totalPages);
-
-  const startIndex = (safePage - 1) * pageSize + 1;
-  const endIndex = Math.min(startIndex + pageSize - 1, totalPositions);
-
-  const tokenIds: bigint[] = [];
-  for (let id = BigInt(startIndex); id <= BigInt(endIndex); id++) {
-    tokenIds.push(id);
-  }
-  
-  const locks = await Promise.all(tokenIds.map(async (tokenId) => {
-    const locked = await dustLockContract.read.locked([tokenId]);
-    return {
-      tokenId,
-      ...locked,
-    };
-  }));
-  
-  return {
-    locks,
-    page: safePage,
-    pageSize,
-    totalPages,
-  };
-}
 
 type ExplorerPageProps = {
   searchParams?: Promise<{
@@ -134,7 +40,6 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
     const getPage = async () => {
       setStatus("loading");
       try {
-        // Prefer client-side query string; keep prop fallback for compatibility.
         const paramsFromProps = await searchParams;
 
         const rawPage = pageParam ?? paramsFromProps?.page;
@@ -143,12 +48,12 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
         const pageFromParams = rawPage ? Number(rawPage) : 1;
         const sizeFromParams = rawSize ? Number(rawSize) : 20;
 
-        const currentPage =
-          Number.isFinite(pageFromParams) && pageFromParams > 0 ? pageFromParams : 1;
-        const size =
-          Number.isFinite(sizeFromParams) && sizeFromParams > 0 && sizeFromParams <= 100
-            ? sizeFromParams
-            : 20;
+        const currentPage = Number.isFinite(pageFromParams) && pageFromParams > 0
+          ? pageFromParams
+          : 1;
+        const size = Number.isFinite(sizeFromParams) && sizeFromParams > 0 && sizeFromParams <= 100
+          ? sizeFromParams
+          : 20;
 
         const { locks, page, pageSize, totalPages } = await getLocksPage(currentPage, size);
         if (cancelled) return;
@@ -284,3 +189,62 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
     </div>
   );
 }
+
+type LocksPage = {
+  locks: Lock[];
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+type Lock = {
+  tokenId: bigint;
+  amount: bigint;
+  effectiveStart: bigint;
+  end: bigint;
+  isPermanent: boolean;
+};
+
+async function getLocksPage(
+  page: number,
+  pageSize = 20,
+  ): Promise<LocksPage> {
+  const latestTokenId = await dustLockContract.read.tokenId();
+    
+  const totalPositions = Number(latestTokenId);
+    
+  if (!Number.isFinite(totalPositions) || totalPositions <= 0) {
+    return {
+      locks: [],
+      page: 1,
+      pageSize,
+      totalPages: 1,
+    };
+  }
+
+  const totalPages = Math.max(1, Math.ceil(totalPositions / pageSize));
+  const safePage = Math.min(Math.max(1, page || 1), totalPages);
+
+  const startIndex = (safePage - 1) * pageSize + 1;
+  const endIndex = Math.min(startIndex + pageSize - 1, totalPositions);
+
+  const tokenIds: bigint[] = [];
+  for (let id = BigInt(startIndex); id <= BigInt(endIndex); id++) {
+    tokenIds.push(id);
+  }
+
+  const locks = await Promise.all(tokenIds.map(async (tokenId) => {
+    const locked = await dustLockContract.read.locked([tokenId]);
+    return {
+      tokenId,
+      ...locked,
+    };
+  }));
+  
+  return {
+    locks,
+    page: safePage,
+    pageSize,
+    totalPages,
+  };
+}  

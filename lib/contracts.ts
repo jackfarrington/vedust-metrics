@@ -1,5 +1,3 @@
-import "server-only";
-
 import { type Address, erc20Abi, getContract } from "viem";
 
 import {
