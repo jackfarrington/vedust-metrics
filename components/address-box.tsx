@@ -10,7 +10,7 @@ export default function AddressBox() {
     const formData = new FormData(e.currentTarget);
     const address = formData.get('address');          
     if (address) {
-      router.push(`/${address}`);
+      router.push(`/positions/${address}`);
     }
   }
 

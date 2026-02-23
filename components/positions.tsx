@@ -1,5 +1,5 @@
 import { type Lock } from "@/lib/portfolio";
-import { formatNumber } from "@/lib/util";
+import { formatDuration, formatNumber } from "@/lib/util";
 
 type PositionsProps = {
   dustPrice: number;
@@ -36,7 +36,7 @@ export default async function Positions({
                 const daysToUnlock = Math.max(0, Math.floor((Number(end) - Date.now() / 1000) / 86400));
                 return (
                 <tr key={tokenId}>
-                  <td className="px-4 py-3 font-mono text-purple-500">{tokenId}</td>
+                  <td className="px-4 py-3 text-left text-purple-500">{tokenId}</td>
                   <td className="px-4 py-3 text-right text-purple-500">{formatNumber(Math.floor(dust))}</td>
                   <td className="px-4 py-3 text-right text-purple-500">${formatNumber(dust * dustPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="px-4 py-3 text-right text-purple-500">{effectiveStart > 0 ? <p>{formatDuration(now - minted)}</p> : null}</td>
@@ -53,34 +53,4 @@ export default async function Positions({
       )}
     </div>
   );
-}
-
-function formatDuration(seconds: number): string {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  if (days >= 2) {
-    return `${days}d`;
-  }
-  
-  if (days === 1) {
-    if (hours > 0) {
-      return `1d ${hours}h`;
-    }
-    return '1d';
-  }
-  
-  if (seconds > 12 * 3600) {
-    return `${hours}h`;
-  }
-
-  if (seconds > 3600) {
-    if (minutes > 0) {
-      return `${hours}h ${minutes}m`;
-    }
-    return `${hours}h`;
-  }
-
-  return `${minutes}m`;
 }

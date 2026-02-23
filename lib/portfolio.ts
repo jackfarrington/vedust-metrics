@@ -22,7 +22,7 @@ export type Portfolio = {
   readonly locks: Lock[];
 };
 
-type NeverlandUseerDashboard = {
+type NeverlandUserDashboard = {
   user: Address;
   tokenIds: readonly bigint[];
   locks: readonly Lock[];
@@ -57,7 +57,7 @@ export async function getPortfolio(address: Address): Promise<Portfolio> {
   const dustAccrued = idx < 0 ? 0n : amounts[idx];
 
   let locks: Lock[] = [];
-  let dashboard: NeverlandUseerDashboard;
+  let dashboard: NeverlandUserDashboard;
   let offset = 0n;
   const limit = 20n;
   do {
