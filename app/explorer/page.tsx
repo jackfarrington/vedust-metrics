@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { type Address, createPublicClient, defineChain, getContract, http } from "viem";
 
@@ -104,23 +107,86 @@ type ExplorerPageProps = {
   }>;
 };
 
-export default async function ExplorerPage({ searchParams }: ExplorerPageProps) {
-  const params = await searchParams;
-  const pageFromParams = params?.page ? Number(params.page) : 1;
-  const sizeFromParams = params?.size && params.size ? Number(params.size) : 20;
-  const currentPage = Number.isFinite(pageFromParams) && pageFromParams > 0 ? pageFromParams : 1;
-  const pageSize = sizeFromParams <= 100 ? sizeFromParams : 20;
+export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
+  const router = useRouter();
+  const urlSearchParams = useSearchParams();
 
-  const { locks, page, totalPages } = await getLocksPage(currentPage, pageSize);
+  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const [locks, setLocks] = useState<Lock[]>([]);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [now, setNow] = useState<number>(Math.floor(Date.now() / 1000));
 
-  const now = Math.floor(Date.now() / 1000);
+  const pageParam = urlSearchParams.get("page");
+  const sizeParam = urlSearchParams.get("size");
+
+  const setExplorerParams = (nextPage: number, nextSize: number) => {
+    const params = new URLSearchParams(urlSearchParams.toString());
+    params.set("page", String(nextPage));
+    params.set("size", String(nextSize));
+    router.replace(`/explorer?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const getPage = async () => {
+      setStatus("loading");
+      try {
+        // Prefer client-side query string; keep prop fallback for compatibility.
+        const paramsFromProps = await searchParams;
+
+        const rawPage = pageParam ?? paramsFromProps?.page;
+        const rawSize = sizeParam ?? paramsFromProps?.size;
+
+        const pageFromParams = rawPage ? Number(rawPage) : 1;
+        const sizeFromParams = rawSize ? Number(rawSize) : 20;
+
+        const currentPage =
+          Number.isFinite(pageFromParams) && pageFromParams > 0 ? pageFromParams : 1;
+        const size =
+          Number.isFinite(sizeFromParams) && sizeFromParams > 0 && sizeFromParams <= 100
+            ? sizeFromParams
+            : 20;
+
+        const { locks, page, pageSize, totalPages } = await getLocksPage(currentPage, size);
+        if (cancelled) return;
+
+        setNow(Math.floor(Date.now() / 1000));
+        setLocks(locks);
+        setPageNumber(page);
+        setPageSize(pageSize);
+        setTotalPages(totalPages);
+        setStatus("loaded");
+      } catch {
+        if (cancelled) return;
+        setStatus("error");
+      }
+    };
+
+    getPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pageParam, sizeParam, searchParams]);
 
   return (
     <div className="flex items-center justify-center px-6 md:pt-6 pb-6 bg-white">
       <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
         <div className="font-body rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50">
           <h3 className="flex justify-center text-xl text-purple-800 font-heading">Locks<span className="text-purple-500 ml-1">({locks.length})</span></h3>
-          {locks.length > 0 ? (
+          {status === "loading" ? (
+          <div className="p-8 text-center">
+            <p className="text-purple-500">Loading...</p>
+          </div>
+          ) : status === "error" ? (
+          <div className="p-8 text-center">
+            <p className="text-purple-500">An error occurred. 😱</p>
+            <p className="text-purple-500">Maybe try again later?</p>
+          </div>
+          ) : locks.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
             <thead className="bg-purple-50 border-b border-purple-100">
@@ -147,68 +213,72 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
                 )})}
               </tbody>
             </table>
+            <div className="flex flex-col md:flex-row gap-3 justify-between items-center text-xs text-purple-500">
+              <div className="flex items-center gap-2 text-xs text-purple-500">
+                <div className="inline-flex overflow-hidden rounded-full border border-purple-200">
+                  {[20, 50, 100].map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setExplorerParams(1, size)}
+                    className={[
+                      "px-3 py-1",
+                      size === pageSize ? "bg-purple-100 text-purple-800" : "bg-white text-purple-700 hover:bg-purple-200",
+                    ].join(" ")}
+                  >
+                    {size}
+                  </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {pageNumber > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setExplorerParams(1, pageSize)}
+                  className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
+                >
+                  First
+                </button>
+                )}
+                {pageNumber > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setExplorerParams(pageNumber - 1, pageSize)}
+                  className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
+                >
+                  Previous
+                </button>
+                )}
+                {pageNumber < totalPages && (
+                <button
+                  type="button"
+                  onClick={() => setExplorerParams(pageNumber + 1, pageSize)}
+                  className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
+                >
+                  Next
+                </button>
+                )}
+                {pageNumber < totalPages && (
+                <button
+                  type="button"
+                  onClick={() => setExplorerParams(totalPages, pageSize)}
+                  className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
+                >
+                  Last
+                </button>
+                )}
+              </div>
+              <span>
+                Page {pageNumber} of {totalPages}
+              </span>
+            </div>
           </div>
           ) : (
           <div className="p-8 text-center">
             <p className="text-purple-500">No locks</p>
           </div>
           )}
-        </div>
-        <div className="flex flex-col md:flex-row gap-3 justify-between items-center text-xs text-purple-500">
-          <div className="flex items-center gap-2 text-xs text-purple-500">
-            <div className="inline-flex overflow-hidden rounded-full border border-purple-200">
-              {[20, 50, 100].map((size) => (
-              <Link
-                key={size}
-                href={`/explorer?page=1&size=${size}`}
-                className={[
-                    "px-3 py-1",
-                    size === pageSize ? "bg-purple-100 text-purple-800" : "text-purple-700 hover:bg-purple-50",
-                ].join(" ")}
-              >
-                {size}
-              </Link>
-            ))}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {page > 1 && (
-              <Link
-                href={`/explorer?page=1&size=${pageSize}`}
-                className="px-3 py-1 rounded-full border border-purple-200 text-purple-700 hover:bg-purple-50"
-              >
-                First
-              </Link>
-            )}
-            {page > 1 && (
-              <Link
-                href={`/explorer?page=${page - 1}&size=${pageSize}`}
-                className="px-3 py-1 rounded-full border border-purple-200 text-purple-700 hover:bg-purple-50"
-              >
-                Previous
-              </Link>
-            )}
-            {page < totalPages && (
-              <Link
-                href={`/explorer?page=${page + 1}&size=${pageSize}`}
-                className="px-3 py-1 rounded-full border border-purple-200 text-purple-700 hover:bg-purple-50"
-              >
-                Next
-              </Link>
-            )}
-            {page < totalPages && (
-              <Link
-                href={`/explorer?page=${totalPages}&size=${pageSize}`}
-                className="px-3 py-1 rounded-full border border-purple-200 text-purple-700 hover:bg-purple-50"
-              >
-                Last
-              </Link>
-            )}
-          </div>
-          <span>
-            Page {page} of {totalPages}
-          </span>
-
         </div>
       </div>
     </div>
