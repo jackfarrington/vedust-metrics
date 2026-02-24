@@ -8,7 +8,7 @@ type OverviewProps = {
   readonly totalPower: number;
 };
 
-export default async function Overview({
+export default function Overview({
   dustPrice,
   portfolio,
   usdcRewards,

@@ -6,7 +6,7 @@ type PositionsProps = {
   positions: Lock[];
 };
 
-export default async function Positions({
+export default function Positions({
   dustPrice,
   positions,
 }: PositionsProps) {
