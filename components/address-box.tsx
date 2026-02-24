@@ -17,7 +17,7 @@ export default function AddressBox() {
   return (
     <form className="flex flex-row gap-2 items-center justify-center mt-6 space-y-3" onSubmit={handleSubmit}>
       <input type="text" name="address" placeholder="Enter an address" className={`mt-6 text-center text-sm text-gray-500 border border-gray-200 rounded-lg p-2 min-w-2xs`} />
-      <button type="submit" className="mt-2 bg-gray-700 hover:bg-gray-600 text-white py-1 px-2 rounded-lg">
+      <button type="submit" className="mt-2 bg-purple-900 hover:bg-purple-700 text-white py-1 px-2 rounded-lg">
         <svg xmlns="http://www.w3.org/2000/svg"
           width="20"
           height="20"

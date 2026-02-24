@@ -18,8 +18,10 @@ export default function LastUpdated({ timestamp }: LastUpdatedProps) {
 
       let newText = '';
 
-      if (seconds < 60) {
-        newText = 'just now';
+      if (seconds === 0) {
+        newText = "just now";
+      } else if (seconds < 60) {
+        newText = `${seconds} second${seconds === 1 ? '' : 's'} ago`;
       } else if (seconds < 3600) {
         const minutes = Math.floor(seconds / 60);
         newText = `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
@@ -32,7 +34,7 @@ export default function LastUpdated({ timestamp }: LastUpdatedProps) {
     };
 
     updateTimeAgo();
-    const interval = setInterval(updateTimeAgo, 60000);
+    const interval = setInterval(updateTimeAgo, 1_000);
 
     return () => clearInterval(interval);
   }, [timestamp]);
