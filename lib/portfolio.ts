@@ -88,13 +88,13 @@ export async function getPortfolio(address: Address): Promise<Portfolio> {
   return portfolio;
 }
 
-export async function getDustPrice(): Promise<number> {
+async function getDustPrice(): Promise<number> {
   const [priceDigits, isOracle] = await neverlandDustHelperContract.read.getPrice();
 
   return isOracle ? Number(priceDigits) / 10**8 : Number(priceDigits) / 10**18;
 }
 
-export async function getPendingRewards(): Promise<{ totalPower: number, usdcReward: number }> {
+async function getPendingRewards(): Promise<{ totalPower: number, usdcReward: number }> {
   const [globalStats, marketData] = await Promise.all([
     neverlandUiProviderContract.read.getGlobalStats(),
     neverlandUiProviderContract.read.getMarketData(),

@@ -1,5 +1,3 @@
-import "server-only";
-
 import { DUST_BURN_ESCROW_ADDRESS } from "@/lib/addresses";
 import {
   dustContract,
@@ -26,29 +24,46 @@ export interface Metrics {
 }
 
 export async function getMetrics(): Promise<Metrics> {
-  const symbol = await dustContract.read.symbol();
-  const decimals = await dustContract.read.decimals();
+  const [
+    symbol,
+    decimals,
+    totalSupplyUnits,
+    pendingBurnUnits,
+
+    teamTotalBalance,
+    [priceDigits, isOracle],
+
+    lockedUnits,
+    permanentUnits,
+    powerUnits,
+  ] = await Promise.all([
+    dustContract.read.symbol(),
+    dustContract.read.decimals(),
+    dustContract.read.totalSupply(),
+    dustContract.read.balanceOf([DUST_BURN_ESCROW_ADDRESS]),
+
+    neverlandDustHelperContract.read.getTeamTotalBalance(),
+    neverlandDustHelperContract.read.getPrice(),
+
+    dustLockContract.read.supply(),
+    dustLockContract.read.permanentLockBalance(),
+    dustLockContract.read.totalSupply(),
+  ]);
+
   const divisor = 10n**BigInt(decimals);
 
   const mintedSupply = MINTED_SUPPLY;
-  const remainingSupply = (await dustContract.read.totalSupply()) / divisor;
+  const remainingSupply = totalSupplyUnits / divisor;
   const burnedSoFar = mintedSupply - remainingSupply;
-  const pendingBurn = (await dustContract.read.balanceOf([DUST_BURN_ESCROW_ADDRESS])) / divisor;
+  const pendingBurn = pendingBurnUnits / divisor;
   const totalBurned = burnedSoFar + pendingBurn;
-
-  const teamTotalBalance = await neverlandDustHelperContract.read.getTeamTotalBalance();
-
   const circulation = remainingSupply - (teamTotalBalance / divisor);
-
-  const locked = (await dustLockContract.read.supply()) / divisor;
-  const infiniteLocked = (await dustLockContract.read.permanentLockBalance()) / divisor;
-  const power = (await dustLockContract.read.totalSupply()) / divisor;
-
+  const locked = lockedUnits / divisor;
+  const infiniteLocked = permanentUnits / divisor;
+  const power = powerUnits / divisor;
   const emittedSupply = totalBurned + locked + circulation;
 
   const lastUpdate = new Date();
-
-  const [priceDigits, isOracle] = await neverlandDustHelperContract.read.getPrice();
 
   const price = isOracle ? Number(priceDigits) / 10**8 : Number(priceDigits) / 10**18;
 

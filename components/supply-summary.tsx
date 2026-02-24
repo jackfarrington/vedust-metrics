@@ -9,7 +9,22 @@ export default async function SupplySummary() {
   'use cache';
 
   cacheLife({ stale: 60, revalidate: 60, expire: 60 });
-  const { symbol, mintedSupply, burnedSoFar, remainingSupply, pendingBurn, totalBurned, circulation, locked, infiniteLocked, power, emittedSupply, lastUpdate, price } = await getMetrics();
+  const metrics = await getMetrics();
+  const {
+    symbol,
+    mintedSupply,
+    burnedSoFar,
+    remainingSupply,
+    pendingBurn,
+    totalBurned,
+    circulation,
+    locked,
+    infiniteLocked,
+    power,
+    emittedSupply,
+    lastUpdate,
+    price,
+  } = metrics;
 
   return (
     <div>
