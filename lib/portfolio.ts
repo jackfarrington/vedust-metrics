@@ -14,10 +14,15 @@ import { tokenToNumber } from "@/lib/util";
 export type Portfolio = {
   readonly account: Address;
   readonly dust: {
+    price: number;
     held: number;
     accrued: number;
   };
   readonly locks: Lock[];
+  readonly platform: {
+    totalPower: number;
+    usdcReward: number;
+  }
 };
 
 type NeverlandUserDashboard = {
@@ -46,9 +51,11 @@ export type Lock = {
 
 export async function getPortfolio(address: Address): Promise<Portfolio> {
 
-  const [dust, [addresses, amounts]] = await Promise.all([
+  const [price, dust, [addresses, amounts], { totalPower, usdcReward }] = await Promise.all([
+    getDustPrice(),
     dustContract.read.balanceOf([address]),
     neverlandUiProviderContract.read.getUserEmissions([address]),
+    getPendingRewards(),
   ]);
 
   const idx = addresses.findIndex(addr => addr === DUST_TOKEN.address);
@@ -67,10 +74,15 @@ export async function getPortfolio(address: Address): Promise<Portfolio> {
   const portfolio: Portfolio = {
     account: address,
     dust: {
+      price,
       held: tokenToNumber(dust, DUST_TOKEN.decimals),
       accrued: tokenToNumber(dustAccrued, DUST_TOKEN.decimals),
     },
     locks,
+    platform: {
+      totalPower,
+      usdcReward,
+    }
   };
 
   return portfolio;
@@ -82,7 +94,7 @@ export async function getDustPrice(): Promise<number> {
   return isOracle ? Number(priceDigits) / 10**8 : Number(priceDigits) / 10**18;
 }
 
-export async function getPendingRewards(): Promise<{ totalPower: number, usdcRewards: number }> {
+export async function getPendingRewards(): Promise<{ totalPower: number, usdcReward: number }> {
   const [globalStats, marketData] = await Promise.all([
     neverlandUiProviderContract.read.getGlobalStats(),
     neverlandUiProviderContract.read.getMarketData(),
@@ -90,6 +102,6 @@ export async function getPendingRewards(): Promise<{ totalPower: number, usdcRew
 
   return {
     totalPower: tokenToNumber(globalStats.totalVotingPower, DUST_TOKEN.decimals),
-    usdcRewards: tokenToNumber(marketData.nextEpochRewards[0], USDC_TOKEN.decimals),
+    usdcReward: tokenToNumber(marketData.nextEpochRewards[0], USDC_TOKEN.decimals),
   } 
 }
