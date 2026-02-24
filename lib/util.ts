@@ -1,3 +1,8 @@
+export type LoadState<T> =
+  | { status: "idle" | "loading" }
+  | { status: "success", value: T }
+  | { status: "error", error: string }
+
 export function formatNumber(
   value: number | bigint | string | null | undefined,
   options: Intl.NumberFormatOptions = {},

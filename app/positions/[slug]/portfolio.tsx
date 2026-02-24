@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { type Address } from "viem";
 
 import { type Portfolio, getPortfolio } from "@/lib/portfolio";
+import { type LoadState } from "@/lib/util";
 
 import Overview from "@/components/overview";
 import Positions from '@/components/positions';
@@ -14,23 +15,21 @@ type PortfolioPageProps = {
 };
 
 export default function PortfolioPage({ address }: PortfolioPageProps) {
-  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
-  const [portfolio, setPortfolio] = useState<Portfolio>();
+  const [state, setState] = useState<LoadState<Portfolio>>({ status: "idle" });
 
   useEffect(() => {
     let cancelled = false;
 
     const loadPage = async () => {
-      setStatus("loading");
+      setState({ status: "loading" });
       try {
         const portfolio = await getPortfolio(address);
-        setPortfolio(portfolio);
 
-        setStatus("loaded");
+        setState({ status: "success", value: portfolio });
       } catch (e) {
         if (cancelled) return;
         console.log('An error occurred.', e);
-        setStatus("error");
+        setState({ status: "error", error: (e as Error)?.message ?? e });
       }
     }
 
@@ -43,18 +42,28 @@ export default function PortfolioPage({ address }: PortfolioPageProps) {
 
   return (
     <div className="flex items-center justify-center px-6 md:pt-6 pb-6 bg-white">
-      {status === "loading" ?
+
+      {state.status === "idle" || state.status === "loading" ?
         <p className="text-sm text-purple-800">Loading portfolio...</p>
-      : status === "loaded" ?
-        portfolio &&
+      : null}
+      
+      {state.status === "success" ?
         <div className="flex flex-col gap-6 w-full max-w-4xl">
           <h1 className="text-xs text-center text-purple-300">{address}</h1>
-          <Overview portfolio={portfolio} />
-          <Positions portfolio={portfolio} />
+          <Overview portfolio={state.value} />
+          <Positions portfolio={state.value} />
         </div>
-      :
-        <p className="text-sm text-red-700">Something went wrong. :(</p>
-      }
-    </div>    
+      : null}
+
+      {state.status === "error" ?
+        <div className="flex items-center justify-center px-6 md:pt-6 pb-6 bg-white">
+          <p className="text-sm text-red-700">Something went wrong. :(</p>
+          {state.error &&
+          <p className="text-sm text-red-700">{state.error}</p>
+          }
+        </div>
+      : null}
+
+    </div>
   );
 }

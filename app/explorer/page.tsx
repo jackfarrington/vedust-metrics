@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { dustLockContract } from "@/lib/contracts";
-import { formatDuration, formatNumber } from "@/lib/util";
+import { type LoadState, formatDuration, formatNumber } from "@/lib/util";
 
 type ExplorerPageProps = {
   searchParams?: Promise<{
@@ -17,11 +17,7 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
   const router = useRouter();
   const urlSearchParams = useSearchParams();
 
-  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
-  const [locks, setLocks] = useState<Lock[]>([]);
-  const [pageNumber, setPageNumber] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(20);
-  const [totalPages, setTotalPages] = useState<number>(1);
+  const [state, setState] = useState<LoadState<LocksPage>>({ status: "idle" });
   const [now, setNow] = useState<number>(Math.floor(Date.now() / 1000));
 
   const pageParam = urlSearchParams.get("page");
@@ -38,7 +34,7 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
     let cancelled = false;
 
     const getPage = async () => {
-      setStatus("loading");
+      setState({ status: "loading" });
       try {
         const paramsFromProps = await searchParams;
 
@@ -48,25 +44,22 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
         const pageFromParams = rawPage ? Number(rawPage) : 1;
         const sizeFromParams = rawSize ? Number(rawSize) : 20;
 
-        const currentPage = Number.isFinite(pageFromParams) && pageFromParams > 0
+        const currentPage = Number.isFinite(pageFromParams) && 0 < pageFromParams
           ? pageFromParams
           : 1;
-        const size = Number.isFinite(sizeFromParams) && sizeFromParams > 0 && sizeFromParams <= 100
+        const size = Number.isFinite(sizeFromParams) && 0 < sizeFromParams && sizeFromParams <= 100
           ? sizeFromParams
           : 20;
 
-        const { locks, page, pageSize, totalPages } = await getLocksPage(currentPage, size);
+        const locksPage = await getLocksPage(currentPage, size);
+        const { locks, page, pageSize, totalPages } = locksPage;
         if (cancelled) return;
 
         setNow(Math.floor(Date.now() / 1000));
-        setLocks(locks);
-        setPageNumber(page);
-        setPageSize(pageSize);
-        setTotalPages(totalPages);
-        setStatus("loaded");
-      } catch {
+        setState({ status: "success", value: locksPage});
+      } catch (e) {
         if (cancelled) return;
-        setStatus("error");
+        setState({ status: "error", error: (e as Error).message });
       }
     };
 
@@ -81,109 +74,118 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
     <div className="flex items-center justify-center px-6 md:pt-6 pb-6 bg-white">
       <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
         <div className="font-body rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50">
-          <h3 className="flex justify-center text-xl text-purple-800 font-heading">Locks<span className="text-purple-500 ml-1">({locks.length})</span></h3>
-          {status === "loading" ? (
+          <h3 className="flex justify-center text-xl text-purple-800 font-heading">
+            Locks {state.status === "success" ? <span className="text-purple-500 ml-1">({state.value.locks.length})</span > : null }
+          </h3>
+
+          {state.status === "idle" || state.status === "loading" ? (
           <div className="p-8 text-center">
-            <p className="text-purple-500">Loading...</p>
+            <p className="text-purple-500">Retreiving locks...</p>
           </div>
-          ) : status === "error" ? (
+          ) : null}
+          
+          {state.status === "error" ? (
           <div className="p-8 text-center">
             <p className="text-purple-500">An error occurred. 😱</p>
             <p className="text-purple-500">Maybe try again later?</p>
           </div>
-          ) : locks.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-            <thead className="bg-purple-50 border-b border-purple-100">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-purple-800">ID</th>
-                <th className="px-4 py-3 text-right font-medium text-purple-800">DUST</th>
-                <th className="px-4 py-3 text-right font-medium text-purple-800">Age</th>
-                <th className="px-4 py-3 text-right font-medium text-purple-800">Days Left</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {locks.toSorted((a, b) => Number(Number(a.tokenId) - Number(b.tokenId))).map(({ tokenId, amount, effectiveStart, end, isPermanent }) => {
-                const dust = Number(amount) / 10**18;
-                const minted = Number(effectiveStart);
-                const daysToUnlock = Math.max(0, Math.floor((Number(end) - Date.now() / 1000) / 86400));
-                const isBurned = amount === 0n && effectiveStart === 0n && end === 0n && !isPermanent;
-                return (
-                  <tr key={tokenId}>
-                    <td className="px-4 py-3 text-left text-purple-500">{tokenId}</td>
-                    <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : formatNumber(dust, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-                    <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : effectiveStart > 0 ? <p>{formatDuration(now - minted)}</p> : '--'}</td>
-                    <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : isPermanent ? '∞' : daysToUnlock > 0 ? daysToUnlock : 'None'}</td>
-                  </tr>
-                )})}
-              </tbody>
-            </table>
-            <div className="flex flex-col md:flex-row gap-3 justify-between items-center text-xs text-purple-500">
-              <div className="flex items-center gap-2 text-xs text-purple-500">
-                <div className="inline-flex overflow-hidden rounded-full border border-purple-200">
-                  {[20, 50, 100].map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setExplorerParams(1, size)}
-                    className={[
-                      "px-3 py-1",
-                      size === pageSize ? "bg-purple-100 text-purple-800" : "bg-white text-purple-700 hover:bg-purple-200",
-                    ].join(" ")}
-                  >
-                    {size}
-                  </button>
-                  ))}
+          ) : null}
+          
+          {state.status === "success" ? (
+            state.value.locks.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-purple-50 border-b border-purple-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium text-purple-800">ID</th>
+                      <th className="px-4 py-3 text-right font-medium text-purple-800">DUST</th>
+                      <th className="px-4 py-3 text-right font-medium text-purple-800">Age</th>
+                      <th className="px-4 py-3 text-right font-medium text-purple-800">Days Left</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {state.value.locks.toSorted((a, b) => Number(Number(a.tokenId) - Number(b.tokenId))).map(({ tokenId, amount, effectiveStart, end, isPermanent }) => {
+                      const dust = Number(amount) / 10**18;
+                      const minted = Number(effectiveStart);
+                      const daysToUnlock = Math.max(0, Math.floor((Number(end) - Date.now() / 1000) / 86400));
+                      const isBurned = amount === 0n && effectiveStart === 0n && end === 0n && !isPermanent;
+                      return (
+                        <tr key={tokenId}>
+                          <td className="px-4 py-3 text-left text-purple-500">{tokenId}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : formatNumber(dust, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : effectiveStart > 0 ? <p>{formatDuration(now - minted)}</p> : '--'}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : isPermanent ? '∞' : daysToUnlock > 0 ? daysToUnlock : 'None'}</td>
+                        </tr>
+                      )})}
+                  </tbody>
+                </table>
+                <div className="flex flex-col md:flex-row gap-3 justify-between items-center text-xs text-purple-500">
+                  <div className="flex items-center gap-2 text-xs text-purple-500">
+                    <div className="inline-flex overflow-hidden rounded-full border border-purple-200">
+                      {[20, 50, 100].map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setExplorerParams(1, size)}
+                        className={[
+                          "px-3 py-1",
+                          size === state.value.pageSize ? "bg-purple-100 text-purple-800" : "bg-white text-purple-700 hover:bg-purple-200",
+                        ].join(" ")}
+                      >
+                        {size}
+                      </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {state.value.page > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setExplorerParams(1, state.value.pageSize)}
+                      className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
+                    >
+                      First
+                    </button>
+                    )}
+                    {state.value.page > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setExplorerParams(state.value.page - 1, state.value.pageSize)}
+                      className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
+                    >
+                      Previous
+                    </button>
+                    )}
+                    {state.value.page < state.value.totalPages && (
+                    <button
+                      type="button"
+                      onClick={() => setExplorerParams(state.value.page + 1, state.value.pageSize)}
+                      className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
+                    >
+                      Next
+                    </button>
+                    )}
+                    {state.value.page < state.value.totalPages && (
+                    <button
+                      type="button"
+                      onClick={() => setExplorerParams(state.value.totalPages, state.value.pageSize)}
+                      className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
+                    >
+                      Last
+                    </button>
+                    )}
+                  </div>
+                  <span>
+                    Page {state.value.page} of {state.value.totalPages}
+                  </span>
                 </div>
               </div>
-              <div className="flex gap-2">
-                {pageNumber > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setExplorerParams(1, pageSize)}
-                  className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
-                >
-                  First
-                </button>
-                )}
-                {pageNumber > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setExplorerParams(pageNumber - 1, pageSize)}
-                  className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
-                >
-                  Previous
-                </button>
-                )}
-                {pageNumber < totalPages && (
-                <button
-                  type="button"
-                  onClick={() => setExplorerParams(pageNumber + 1, pageSize)}
-                  className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
-                >
-                  Next
-                </button>
-                )}
-                {pageNumber < totalPages && (
-                <button
-                  type="button"
-                  onClick={() => setExplorerParams(totalPages, pageSize)}
-                  className="px-3 py-1 rounded-full border border-purple-200 bg-white text-purple-700 hover:bg-purple-200"
-                >
-                  Last
-                </button>
-                )}
-              </div>
-              <span>
-                Page {pageNumber} of {totalPages}
-              </span>
+            ) : (
+            <div className="p-8 text-center">
+              <p className="text-purple-500">No locks</p>
             </div>
-          </div>
-          ) : (
-          <div className="p-8 text-center">
-            <p className="text-purple-500">No locks</p>
-          </div>
-          )}
+            )
+          ) : null}
         </div>
       </div>
     </div>
