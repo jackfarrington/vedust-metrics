@@ -15,10 +15,11 @@ export default function Overview({
     }
   }, { dustUnits: 0n, powerUnits: 0n });
   const dustLocked = Number(dustUnits) / 10**18;
-  const power = Number(powerUnits) / 10**18;
+  const powerLocked = Number(powerUnits) / 10**18;
   const totalDust = portfolio.dust.held + portfolio.dust.accrued + dustLocked;
   const netAccountValue = totalDust * portfolio.dust.price;
-  const pendingLockRewards = portfolio.platform.usdcReward * power / portfolio.platform.totalPower;
+  const powerRatio = powerLocked / portfolio.platform.totalPower;
+  const pendingLockRewards = portfolio.platform.usdcReward * powerRatio;
 
   return (
     <div className="font-body rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50">
@@ -40,13 +41,13 @@ export default function Overview({
           <p className="text-sm font-medium text-purple-800">Locked</p>
           <p className="text-sm text-purple-500">{formatNumber(dustLocked, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}<span className="text-xs"> ≈ ${formatNumber(dustLocked * portfolio.dust.price, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
         </div>
-        <div className="flex flex-col justify-between">
-          <p className="text-sm font-medium text-purple-800">Power</p>
-          <p className="text-sm text-purple-500">{formatNumber(power, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
-        </div>
         <div>
           <p className="text-sm font-medium text-purple-800">Value</p>
           <p className="text-sm text-purple-500">${formatNumber(netAccountValue, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-purple-800">Power Ratio</p>
+          <p className={`text-sm text-purple-500`}>{formatNumber(powerRatio, { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
         </div>
         <div>
           <p className="text-sm font-medium text-purple-800">Epoch Earnings</p>
