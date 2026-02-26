@@ -52,14 +52,13 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
           : 20;
 
         const locksPage = await getLocksPage(currentPage, size);
-        const { locks, page, pageSize, totalPages } = locksPage;
         if (cancelled) return;
 
         setNow(Math.floor(Date.now() / 1000));
         setState({ status: "success", value: locksPage});
       } catch (e) {
         if (cancelled) return;
-        setState({ status: "error", error: (e as Error).message });
+        setState({ status: "error", error: e instanceof Error ? e.message : 'An error occurred while loading the page.' });
       }
     };
 

@@ -1,7 +1,6 @@
-import Link from 'next/link';
-
-import SupplySummary from '@/components/supply-summary';
 import AddressBox from '@/components/address-box';
+import ExplorerLink from '@/components/explorer-link';
+import SupplySummary from '@/components/supply-summary';
 
 export default async function Home() {
   return (
@@ -10,9 +9,7 @@ export default async function Home() {
 
       <AddressBox />
 
-      <div className="flex justify-center">
-        <Link href="/explorer">🧭</Link>
-      </div>
+      <ExplorerLink />
     </main>
   );
 }
