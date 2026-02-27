@@ -9,6 +9,7 @@ import { type LoadState } from "@/lib/util";
 
 import Overview from "@/components/overview";
 import Positions from '@/components/positions';
+import AddressBox from "@/components/address-box";
 
 type PortfolioPageProps = {
   address: Address;
@@ -49,8 +50,10 @@ export default function PortfolioPage({ address }: PortfolioPageProps) {
       
       {state.status === "success" ?
         <div className="flex flex-col gap-6 w-full max-w-4xl">
-          <h1 className="text-xs text-center text-purple-300">{address}</h1>
+          <AddressBox defaultAddress={address} />
+          
           <Overview portfolio={state.value} />
+          
           <Positions portfolio={state.value} />
         </div>
       : null}
