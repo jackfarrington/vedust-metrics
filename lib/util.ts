@@ -37,11 +37,11 @@ export function formatDuration(seconds: number): string {
     return '1d';
   }
   
-  if (seconds > 12 * 3600) {
+  if (hours >= 12) {
     return `${hours}h`;
   }
 
-  if (seconds > 3600) {
+  if (hours >= 1) {
     if (minutes > 0) {
       return `${hours}h ${minutes}m`;
     }
