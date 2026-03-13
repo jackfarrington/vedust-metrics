@@ -99,7 +99,7 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
                       <th className="px-4 py-3 text-left font-medium text-purple-800">ID</th>
                       <th className="px-4 py-3 text-right font-medium text-purple-800">DUST</th>
                       <th className="px-4 py-3 text-right font-medium text-purple-800">Age</th>
-                      <th className="px-4 py-3 text-right font-medium text-purple-800">Days Left</th>
+                      <th className="px-4 py-3 text-right font-medium text-purple-800">Time Left</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -113,7 +113,7 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
                           <td className="px-4 py-3 text-left text-purple-500">{tokenId}</td>
                           <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : formatNumber(dust, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
                           <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : effectiveStart > 0 ? <p>{formatDuration(now - minted)}</p> : '--'}</td>
-                          <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : isPermanent ? '∞' : daysToUnlock > 0 ? daysToUnlock : 'None'}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : isPermanent ? '∞' : Number(end) > now ? formatDuration(Number(end) - now) : 'None'}</td>
                         </tr>
                       )})}
                   </tbody>
