@@ -113,7 +113,7 @@ export default function ExplorerPage({ searchParams }: ExplorerPageProps) {
                           <td className="px-4 py-3 text-left text-purple-500">{tokenId}</td>
                           <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : formatNumber(dust, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
                           <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : effectiveStart > 0 ? <p>{formatDuration(now - minted)}</p> : '--'}</td>
-                          <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : isPermanent ? '∞' : Number(end) > now ? formatDuration(Number(end) - now) : 'None'}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{isBurned ? '🔥' : isPermanent ? '♾️' : Number(end) > now ? formatDuration(Number(end) - now) : 'None'}</td>
                         </tr>
                       )})}
                   </tbody>

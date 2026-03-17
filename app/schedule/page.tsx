@@ -5,6 +5,14 @@ import { useEffect, useState } from "react";
 import { dustLockContract } from "@/lib/contracts";
 import { type LoadState, formatDuration, formatNumber, zip } from "@/lib/util";
 
+const Label = {
+  infinite: '♾️',
+  burned: '🔥',
+  unlocked: 'Unlocked',
+};
+
+type Label = typeof Label[keyof typeof Label];
+
 export default function SchedulePage() {
   const [state, setState] = useState<LoadState<Lock[]>>({ status: "idle" });
   const [now, setNow] = useState<number>(Math.floor(Date.now() / 1000));
@@ -83,9 +91,9 @@ export default function SchedulePage() {
                       const dustNumber = Number(totalDust) / 10 ** 18;
                       return (
                         <tr key={label}>
-                          <td className="px-4 py-3 text-left text-purple-500">{label === '∞' || label === '🔥' || label === 'None' ? label : formatDuration(Number(label))}</td>
+                          <td className="px-4 py-3 text-left text-purple-500">{label === Label.infinite || label === Label.burned || label === Label.unlocked ? label : formatDuration(Number(label))}</td>
                           <td className="px-4 py-3 text-right text-purple-500">{formatNumber(count)}</td>
-                          <td className="px-4 py-3 text-right text-purple-500">{label === '🔥' ? label : formatNumber(dustNumber)}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{label === Label.burned ? label : formatNumber(dustNumber)}</td>
                         </tr>
                       );
                     })}
@@ -148,10 +156,10 @@ function computeSummary(locks: Lock[], now: number): { label: string; count: num
   for (const l of locks) {
     const { amount, effectiveStart, end, isPermanent } = l;
     const isBurned = amount === 0n && effectiveStart === 0n && end === 0n && !isPermanent;
-    let label: string | number;
-    if (isBurned) label = '🔥';
-    else if (isPermanent) label = '∞';
-    else if (Number(end) <= now) label = 'None';
+    let label: Label | number;
+    if (isBurned) label = Label.burned;
+    else if (isPermanent) label = Label.infinite;
+    else if (Number(end) <= now) label = Label.unlocked;
     else {
       const secs = Number(end) - now;
       label = secs.toString();
@@ -166,10 +174,10 @@ function computeSummary(locks: Lock[], now: number): { label: string; count: num
   const rows = Array.from(map.entries()).map(([label, v]) => ({ label, count: v.count, totalDust: v.total }));
 
   rows.sort((a, b) => {
-    const rank = (l: string) => {
-      if (l === '∞') return -3;
-      if (l === '🔥') return -2;
-      if (l === 'None') return -1;
+    const rank = (l: Label | number) => {
+      if (l === Label.infinite) return -3;
+      if (l === Label.burned) return -2;
+      if (l === Label.unlocked) return -1;
       return Number(l);
     };
     return rank(a.label) - rank(b.label);

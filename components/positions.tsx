@@ -37,7 +37,7 @@ export default function Positions({
                   <td className="px-4 py-3 text-right text-purple-500">{formatNumber(Math.floor(dust))}</td>
                   <td className="px-4 py-3 text-right text-purple-500">${formatNumber(dust * portfolio.dust.price, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="px-4 py-3 text-right text-purple-500">{effectiveStart > 0 ? <p>{formatDuration(now - minted)}</p> : null}</td>
-                  <td className="px-4 py-3 text-right text-purple-500">{isPermanent ? '∞' : Number(end) > now ? formatDuration(Number(end) - now) : 'None'}</td>
+                  <td className="px-4 py-3 text-right text-purple-500">{isPermanent ? '♾️' : Number(end) > now ? formatDuration(Number(end) - now) : 'None'}</td>
                 </tr>
               )})}
             </tbody>
