@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import { DUST_TOKEN } from "@/lib/addresses";
 import { dustLockContract } from "@/lib/contracts";
-import { type LoadState, formatDuration, formatNumber, zip } from "@/lib/util";
+import { type LoadState, formatDuration, formatNumber, tokenToNumber, zip } from "@/lib/util";
 
 const Label = {
   infinite: '♾️',
@@ -11,7 +12,7 @@ const Label = {
   unlocked: 'Expired',
 };
 
-type Label = typeof Label[keyof typeof Label];
+type Label = typeof Label[keyof typeof Label] | number;
 
 export default function SchedulePage() {
   const [state, setState] = useState<LoadState<Lock[]>>({ status: "idle" });
@@ -87,13 +88,13 @@ export default function SchedulePage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {computeSummary(state.value, now).map(({ label, count, totalDust }) => {
-                      const dustNumber = Number(totalDust) / 10 ** 18;
+                    {computeSummary(state.value, now).map(({ label, locks, dust }) => {
+                      const totalDust = tokenToNumber(dust, DUST_TOKEN.decimals);
                       return (
                         <tr key={label}>
                           <td className="px-4 py-3 text-left text-purple-500">{label === Label.infinite || label === Label.burned || label === Label.unlocked ? label : formatDuration(Number(label))}</td>
-                          <td className="px-4 py-3 text-right text-purple-500">{formatNumber(count)}</td>
-                          <td className="px-4 py-3 text-right text-purple-500">{label === Label.burned ? label : formatNumber(dustNumber)}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{formatNumber(locks)}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{label === Label.burned ? label : formatNumber(totalDust)}</td>
                         </tr>
                       );
                     })}
@@ -150,31 +151,31 @@ async function getAllLocksBatched(
   return locks;
 }
 
-function computeSummary(locks: Lock[], now: number): { label: string; count: number; totalDust: bigint }[] {
-  const map = new Map<string, { count: number; total: bigint }>();
+function computeSummary(locks: Lock[], now: number): { label: Label; locks: number; dust: bigint }[] {
+  const map = new Map<Label, { locks: number; dust: bigint }>();
 
   for (const l of locks) {
     const { amount, effectiveStart, end, isPermanent } = l;
     const isBurned = amount === 0n && effectiveStart === 0n && end === 0n && !isPermanent;
-    let label: Label | number;
-    if (isBurned) label = Label.burned;
-    else if (isPermanent) label = Label.infinite;
-    else if (Number(end) <= now) label = Label.unlocked;
-    else {
-      const secs = Number(end) - now;
-      label = secs.toString();
-    }
+    const label: Label =
+      isBurned
+        ? Label.burned
+        : isPermanent
+        ? Label.infinite
+        : Number(end) <= now
+        ? Label.unlocked
+        : Number(end) - now;
 
-    const cur = map.get(label) ?? { count: 0, total: 0n };
-    cur.count += 1;
-    cur.total += amount;
+    const cur = map.get(label) ?? { locks: 0, dust: 0n };
+    cur.locks += 1;
+    cur.dust += amount;
     map.set(label, cur);
   }
 
-  const rows = Array.from(map.entries()).map(([label, v]) => ({ label, count: v.count, totalDust: v.total }));
+  const rows = Array.from(map.entries()).map(([label, v]) => ({ label, locks: v.locks, dust: v.dust }));
 
   rows.sort((a, b) => {
-    const rank = (l: Label | number) => {
+    const rank = (l: Label) => {
       if (l === Label.infinite) return -3;
       if (l === Label.burned) return -2;
       if (l === Label.unlocked) return -1;
