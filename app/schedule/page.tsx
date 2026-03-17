@@ -8,7 +8,7 @@ import { type LoadState, formatDuration, formatNumber, zip } from "@/lib/util";
 const Label = {
   infinite: '♾️',
   burned: '🔥',
-  unlocked: 'Unlocked',
+  unlocked: 'Expired',
 };
 
 type Label = typeof Label[keyof typeof Label];
