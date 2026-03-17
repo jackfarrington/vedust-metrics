@@ -50,3 +50,7 @@ export function formatDuration(seconds: number): string {
 
   return `${minutes}m`;
 }
+
+export function zip<T, U>(a: readonly T[], b: readonly U[]): [T, U][] {
+  return a.map((elem, index) => [elem, b[index]]);
+}

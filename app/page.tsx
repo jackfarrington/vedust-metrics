@@ -1,6 +1,7 @@
 import AddressBox from '@/components/address-box';
 import ExplorerLink from '@/components/explorer-link';
 import SupplySummary from '@/components/supply-summary';
+import ScheduleLink from '@/components/schedule-link';
 
 export default async function Home() {
   return (
@@ -10,6 +11,8 @@ export default async function Home() {
       <AddressBox />
 
       <ExplorerLink />
+
+      <ScheduleLink />
     </main>
   );
 }
