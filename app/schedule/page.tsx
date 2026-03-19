@@ -113,7 +113,7 @@ export default function SchedulePage() {
                         <tr key={label}>
                           <td className="px-4 py-3 text-left text-purple-500">{label === Label.infinite || label === Label.burned || label === Label.unlocked ? label : formatDuration(Number(label))}</td>
                           <td className="px-4 py-3 text-right text-purple-500">{formatNumber(locks)}</td>
-                          <td className="px-4 py-3 text-right text-purple-500">{formatNumber(tokenToNumber(dust, DUST_TOKEN.decimals))}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{label === Label.burned ? label : formatNumber(tokenToNumber(dust, DUST_TOKEN.decimals))}</td>
                         </tr>
                       );
                     })}
