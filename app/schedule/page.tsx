@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import { DUST_TOKEN } from "@/lib/addresses";
-import { dustLockContract } from "@/lib/contracts";
+import { DUST_BURN_ESCROW_ADDRESS, DUST_TOKEN } from "@/lib/addresses";
+import { dustContract, dustLockContract } from "@/lib/contracts";
+import { MINTED_SUPPLY } from "@/lib/metrics";
 import { type LoadState, formatDuration, formatNumber, tokenToNumber, zip } from "@/lib/util";
 
 const Label = {
@@ -14,8 +15,14 @@ const Label = {
 
 type Label = typeof Label[keyof typeof Label] | number;
 
+type EpochSummary = {
+  label: Label;
+  locks: number;
+  dust: bigint;
+}
+
 export default function SchedulePage() {
-  const [state, setState] = useState<LoadState<Lock[]>>({ status: "idle" });
+  const [state, setState] = useState<LoadState<EpochSummary[]>>({ status: "idle" });
   const [now, setNow] = useState<number>(Math.floor(Date.now() / 1000));
   const [progress, setProgress] = useState<{ loaded: number; total: number }>({ loaded: 0, total: 0 });
 
@@ -24,7 +31,7 @@ export default function SchedulePage() {
 
     const getLocks = async () => {
       setState({ status: "loading" });
-      try {
+      try {        
         const locks = await getAllLocksBatched(100, 100, (loaded, total) => {
           if (cancelled) return;
           setProgress({ loaded, total });
@@ -32,8 +39,21 @@ export default function SchedulePage() {
 
         if (cancelled) return;
 
+        const epochSummaries = computeSummary(locks, now);
+        const burnedSummary = epochSummaries.find((row) => row.label === Label.burned);
+        if (burnedSummary) {
+          const [
+            totalSupplyUnits,
+            pendingBurnUnits,
+          ] = await Promise.all([
+            dustContract.read.totalSupply(),
+            dustContract.read.balanceOf([DUST_BURN_ESCROW_ADDRESS]),
+          ]);
+          burnedSummary.dust = MINTED_SUPPLY * 10n**BigInt(DUST_TOKEN.decimals) - totalSupplyUnits + pendingBurnUnits;
+        }
+
         setNow(Math.floor(Date.now() / 1000));
-        setState({ status: "success", value: locks});
+        setState({ status: "success", value: epochSummaries });
       } catch (e) {
         if (cancelled) return;
         setState({ status: "error", error: e instanceof Error ? e.message : 'An error occurred while loading the page.' });
@@ -52,7 +72,7 @@ export default function SchedulePage() {
       <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto">
         <div className="font-body rounded-xl p-3 border border-purple-100 shadow-sm bg-purple-50">
           <h3 className="flex justify-center text-xl text-purple-800 font-heading">
-            {state.status === "success" ? formatNumber(state.value.length) : null } Locks
+            {state.status === "success" ? formatNumber(state.value.reduce((acc, row) => acc + row.locks, 0)) : null } Locks
           </h3>
 
           {state.status === "idle" || state.status === "loading" ? (
@@ -88,13 +108,12 @@ export default function SchedulePage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {computeSummary(state.value, now).map(({ label, locks, dust }) => {
-                      const totalDust = tokenToNumber(dust, DUST_TOKEN.decimals);
+                    {state.value.map(({ label, locks, dust }) => {
                       return (
                         <tr key={label}>
                           <td className="px-4 py-3 text-left text-purple-500">{label === Label.infinite || label === Label.burned || label === Label.unlocked ? label : formatDuration(Number(label))}</td>
                           <td className="px-4 py-3 text-right text-purple-500">{formatNumber(locks)}</td>
-                          <td className="px-4 py-3 text-right text-purple-500">{label === Label.burned ? label : formatNumber(totalDust)}</td>
+                          <td className="px-4 py-3 text-right text-purple-500">{formatNumber(tokenToNumber(dust, DUST_TOKEN.decimals))}</td>
                         </tr>
                       );
                     })}
